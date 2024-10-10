@@ -6,31 +6,17 @@ import (
 	"log"
 	"net"
 
-	desc "github.com/spv-dev/chat-server/pkg/chat_v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	desc "github.com/spv-dev/chat-server/pkg/chat_v1"
 )
 
 const grpcPort = 50051
 
 type server struct {
 	desc.UnimplementedChatV1Server
-}
-
-func (s *server) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
-	log.Printf("Method: %s\nRequest: %v\nContext: %v\n", "Create", req, ctx)
-	return &desc.CreateResponse{}, nil
-}
-
-func (s *server) Delete(ctx context.Context, req *desc.DeleteRequest) (*emptypb.Empty, error) {
-	log.Printf("Method: %s\nRequest: %v\nContext: %v\n", "Delete", req, ctx)
-	return nil, nil
-}
-
-func (s *server) SendMessage(ctx context.Context, req *desc.SendMessageRequest) (*emptypb.Empty, error) {
-	log.Printf("Method: %s\nRequest: %v\nContext: %v\n", "SendMessage", req, ctx)
-	return nil, nil
 }
 
 func main() {
@@ -47,4 +33,24 @@ func main() {
 	if err = s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %s", err)
 	}
+}
+
+// CreateChat creates a new chat
+//
+// Return id of created chat
+func (s *server) CreateChat(ctx context.Context, req *desc.CreateChatRequest) (*desc.CreateChatResponse, error) {
+	log.Printf("Method: %s\nRequest: %v\nContext: %v\n", "CreateChat", req, ctx)
+	return &desc.CreateChatResponse{}, nil
+}
+
+// DeleteChat deletes the chat by id
+func (s *server) DeleteChat(ctx context.Context, req *desc.DeleteChatRequest) (*emptypb.Empty, error) {
+	log.Printf("Method: %s\nRequest: %v\nContext: %v\n", "DeleteChat", req, ctx)
+	return nil, nil
+}
+
+// SendMessage sends the user's message to chat
+func (s *server) SendMessage(ctx context.Context, req *desc.SendMessageRequest) (*emptypb.Empty, error) {
+	log.Printf("Method: %s\nRequest: %v\nContext: %v\n", "SendMessage", req, ctx)
+	return nil, nil
 }

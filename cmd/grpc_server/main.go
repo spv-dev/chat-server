@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/spv-dev/chat-server/database"
 	desc "github.com/spv-dev/chat-server/pkg/chat_v1"
 )
 
@@ -30,27 +31,34 @@ func main() {
 	desc.RegisterChatV1Server(s, &server{})
 	log.Printf("server listening at %s", lis.Addr())
 
+	//инициализация базы данных
+	database.InitDB()
+	defer database.CloseDB()
+
 	if err = s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %s", err)
 	}
+
 }
 
 // CreateChat creates a new chat
 //
 // Return id of created chat
 func (s *server) CreateChat(ctx context.Context, req *desc.CreateChatRequest) (*desc.CreateChatResponse, error) {
-	log.Printf("Method: %s\nRequest: %v\nContext: %v\n", "CreateChat", req, ctx)
-	return &desc.CreateChatResponse{}, nil
+	return database.CreateChatDB(ctx, req)
 }
 
 // DeleteChat deletes the chat by id
 func (s *server) DeleteChat(ctx context.Context, req *desc.DeleteChatRequest) (*emptypb.Empty, error) {
-	log.Printf("Method: %s\nRequest: %v\nContext: %v\n", "DeleteChat", req, ctx)
-	return nil, nil
+	return database.DeleteChatDB(ctx, req)
 }
 
 // SendMessage sends the user's message to chat
 func (s *server) SendMessage(ctx context.Context, req *desc.SendMessageRequest) (*emptypb.Empty, error) {
-	log.Printf("Method: %s\nRequest: %v\nContext: %v\n", "SendMessage", req, ctx)
-	return nil, nil
+	return database.SendMessageDB(ctx, req)
+}
+
+// GetChatMessages получает все сообщения чата
+func (s *server) GetChatMessages(ctx context.Context, req *desc.GetChatMessagesRequest) (*desc.GetChatMessagesResponse, error) {
+	return database.GetChatMessagesDB(ctx, req)
 }

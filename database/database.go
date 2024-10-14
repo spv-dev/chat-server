@@ -49,20 +49,20 @@ func CreateChatDB(ctx context.Context, req *desc.CreateChatRequest) (*desc.Creat
 		log.Fatalf("failed to build query: %v", err)
 	}
 
-	var chatId int64
-	if err = pool.QueryRow(ctx, query, args...).Scan(&chatId); err != nil {
+	var chatID int64
+	if err = pool.QueryRow(ctx, query, args...).Scan(&chatID); err != nil {
 		log.Fatalf("failed to insert chat: %v", err)
 	}
 
-	log.Printf("inserted chat with id: %d", chatId)
+	log.Printf("inserted chat with id: %d", chatID)
 
 	// добавим информацию о пользователях в чате
 	builderUsers := sq.Insert("chat_users").
 		PlaceholderFormat(sq.Dollar).
 		Columns("chat_id", "user_id")
 
-	for _, user_id := range req.Info.UserIds {
-		builderUsers = builderUsers.Values(chatId, user_id)
+	for _, userID := range req.Info.UserIds {
+		builderUsers = builderUsers.Values(chatID, userID)
 	}
 
 	query, args, err = builderUsers.ToSql()
@@ -74,10 +74,10 @@ func CreateChatDB(ctx context.Context, req *desc.CreateChatRequest) (*desc.Creat
 		log.Fatalf("failed to insert chat users: %v", err)
 	}
 
-	log.Printf("inserted chat users: %d", chatId)
+	log.Printf("inserted chat users: %d", chatID)
 
 	return &desc.CreateChatResponse{
-		Id: chatId,
+		Id: chatID,
 	}, nil
 }
 
@@ -144,24 +144,24 @@ func GetChatMessagesDB(ctx context.Context, req *desc.GetChatMessagesRequest) (*
 	}
 
 	list := make([]*desc.Message, 0)
-	var id, userId int64
-	var typeId int32
+	var id, userID int64
+	var typeID int32
 	var body string
 	var createdAt time.Time
 
 	for rows.Next() {
-		err = rows.Scan(&id, &userId, &body, &createdAt, &typeId)
+		err = rows.Scan(&id, &userID, &body, &createdAt, &typeID)
 		if err != nil {
 			log.Fatalf("failed to scan message: %v", err)
 		}
 		list = append(list, &desc.Message{
 			Id: id,
 			Info: &desc.MessageInfo{
-				UserId: userId,
+				UserId: userID,
 				Body:   body,
 			},
 			CreatedAt: timestamppb.New(createdAt),
-			Type:      typeId,
+			Type:      typeID,
 		})
 	}
 

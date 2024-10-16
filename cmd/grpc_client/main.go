@@ -7,7 +7,6 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	desc "github.com/spv-dev/chat-server/pkg/chat_v1"
 )
@@ -36,8 +35,8 @@ func main() {
 
 	respCreate, err := c.CreateChat(ctx, &desc.CreateChatRequest{
 		Info: &desc.ChatInfo{
-			Name:     "First Chat",
-			UsersIds: []int64{5, 100, 1200},
+			Title:   "First Chat",
+			UserIds: []int64{5, 100, 1200},
 		},
 	})
 	if err != nil {
@@ -55,9 +54,9 @@ func main() {
 
 	respSendMessage, err := c.SendMessage(ctx, &desc.SendMessageRequest{
 		Info: &desc.MessageInfo{
-			From:      100,
-			Text:      "Hello, my friend!",
-			Timestamp: timestamppb.Now(),
+			ChatId: 1,
+			UserId: 100,
+			Body:   "Hello, my friend!",
 		},
 	})
 	if err != nil {

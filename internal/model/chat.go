@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Chat модель чата сервисного слоя
 type Chat struct {
 	ID        int64
 	Info      ChatInfo
@@ -14,7 +15,8 @@ type Chat struct {
 	DeletedAt sql.NullTime
 }
 
+// ChatInfo модель информации о чате сервисного слоя
 type ChatInfo struct {
 	Title   string
-	UserIds []int64
+	UserIDs []int64
 }

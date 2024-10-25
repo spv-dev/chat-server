@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Message модель сообщения сервисного слоя
 type Message struct {
 	ID        int64
 	Info      MessageInfo
@@ -15,6 +16,7 @@ type Message struct {
 	DeletedAt sql.NullTime
 }
 
+// MessageInfo модель информации о сообщении сервисного слоя
 type MessageInfo struct {
 	ChatID int64
 	UserID int64

@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 
-	"github.com/spv-dev/chat-server/internal/model"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	"github.com/spv-dev/chat-server/internal/model"
 )
 
+// ChatService описание методов сервисного слоя
 type ChatService interface {
 	CreateChat(ctx context.Context, info *model.ChatInfo) (int64, error)
 	DeleteChat(ctx context.Context, id int64) (*emptypb.Empty, error)

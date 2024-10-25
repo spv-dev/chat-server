@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Chat модель БД для чата
 type Chat struct {
 	ID        int64        `db:"id"`
 	Info      ChatInfo     `db:""`
@@ -14,6 +15,7 @@ type Chat struct {
 	DeletedAt sql.NullTime `db:"deleted_at"`
 }
 
+// ChatInfo модель информации о чате в БД
 type ChatInfo struct {
 	Title string `db:"title"`
 }

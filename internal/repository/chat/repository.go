@@ -9,8 +9,10 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/spv-dev/chat-server/internal/client/db"
-	"github.com/spv-dev/chat-server/internal/model"
+	model "github.com/spv-dev/chat-server/internal/model"
 	"github.com/spv-dev/chat-server/internal/repository"
+	"github.com/spv-dev/chat-server/internal/repository/chat/converter"
+	modelRepo "github.com/spv-dev/chat-server/internal/repository/chat/model"
 )
 
 const (
@@ -23,8 +25,8 @@ const (
 	deletedAtColumn = "deleted_at"
 
 	messagesTable = "messages"
-	chatIdColumn  = "chat_id"
-	userIdColumn  = "user_id"
+	chatIDColumn  = "chat_id"
+	userIDColumn  = "user_id"
 	typeColumn    = "type_id"
 	bodyColumn    = "body"
 )
@@ -33,12 +35,14 @@ type repo struct {
 	db db.Client
 }
 
+// NewRepository конструктор слоя repo
 func NewRepository(db db.Client) repository.ChatRepository {
 	return &repo{
 		db: db,
 	}
 }
 
+// CreateChat добавление чата в базу данных
 func (r *repo) CreateChat(ctx context.Context, info *model.ChatInfo) (int64, error) {
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
@@ -66,6 +70,8 @@ func (r *repo) CreateChat(ctx context.Context, info *model.ChatInfo) (int64, err
 	return chatID, nil
 }
 
+// DeleteChat удаление чата из базы данных
+// Не удаляет совсем, а устанавливает state = 0 /*DELETED*/
 func (r *repo) DeleteChat(ctx context.Context, id int64) (*emptypb.Empty, error) {
 	// будем не удалять информацию о чате, а менять статус
 	builder := sq.Update(tableName).
@@ -90,11 +96,12 @@ func (r *repo) DeleteChat(ctx context.Context, id int64) (*emptypb.Empty, error)
 	return nil, nil
 }
 
+// SendMessage добавляет сообщение в БД
 func (r *repo) SendMessage(ctx context.Context, info *model.MessageInfo) (*emptypb.Empty, error) {
 	// добавим информацию о чате
 	builder := sq.Insert(messagesTable).
 		PlaceholderFormat(sq.Dollar).
-		Columns(chatIdColumn, userIdColumn, bodyColumn).
+		Columns(chatIDColumn, userIDColumn, bodyColumn).
 		Values(info.ChatID, info.UserID, info.Body).
 		Suffix("returning id")
 
@@ -114,12 +121,13 @@ func (r *repo) SendMessage(ctx context.Context, info *model.MessageInfo) (*empty
 	return nil, nil
 }
 
+// GetChatMessages получает сообщения указанного чата из БД
 func (r *repo) GetChatMessages(ctx context.Context, id int64) ([]*model.Message, error) {
 	// будем не удалять информацию о чате, а менять статус
-	builder := sq.Select(idColumn, userIdColumn, bodyColumn, createdAtColumn, typeColumn).
+	builder := sq.Select(idColumn, userIDColumn, bodyColumn, createdAtColumn, typeColumn).
 		PlaceholderFormat(sq.Dollar).
 		From(messagesTable).
-		Where(sq.Eq{chatIdColumn: id, stateColumn: 1}).
+		Where(sq.Eq{chatIDColumn: id, stateColumn: 1}).
 		OrderBy("created_at DESC").
 		Limit(20)
 
@@ -130,14 +138,14 @@ func (r *repo) GetChatMessages(ctx context.Context, id int64) ([]*model.Message,
 
 	q := db.Query{
 		QueryRaw: query,
-		Name:     "chat_repository.SendMessage",
+		Name:     "chat_repository.GetChatMessages",
 	}
 
-	var messages []*model.Message
-	err = r.db.DB().ScanAllContext(ctx, messages, q, args...)
+	var messagesRepo []*modelRepo.Message
+	err = r.db.DB().ScanAllContext(ctx, &messagesRepo, q, args...)
 	if err != nil {
-		log.Fatalf("failed to update chat: %v", err)
+		log.Fatalf("failed to get messages: %v", err)
 	}
 
-	return messages, nil
+	return converter.ToMessagesFromRepo(messagesRepo), nil
 }

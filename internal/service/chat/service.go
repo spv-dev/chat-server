@@ -11,6 +11,7 @@ type serv struct {
 	txManager      db.TxManager
 }
 
+// NewService конструктор нового сервиса
 func NewService(chatRepository repository.ChatRepository,
 	txManager db.TxManager) service.ChatService {
 	return &serv{

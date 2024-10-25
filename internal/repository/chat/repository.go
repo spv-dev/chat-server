@@ -2,6 +2,7 @@ package chat
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -29,6 +30,8 @@ const (
 	userIDColumn  = "user_id"
 	typeColumn    = "type_id"
 	bodyColumn    = "body"
+
+	chatUsersTable = "chat_users"
 )
 
 type repo struct {
@@ -52,7 +55,7 @@ func (r *repo) CreateChat(ctx context.Context, info *model.ChatInfo) (int64, err
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to create chat builder: %v", err)
 	}
 
 	q := db.Query{
@@ -62,12 +65,42 @@ func (r *repo) CreateChat(ctx context.Context, info *model.ChatInfo) (int64, err
 
 	var chatID int64
 	if err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&chatID); err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to add chat to db: %v", err)
 	}
 
 	log.Printf("inserted new chat with id = %v", chatID)
 
 	return chatID, nil
+}
+
+// AddUsersToChat добавление пользователей в чат
+func (r *repo) AddUsersToChat(ctx context.Context, chatID int64, userIDs []int64) error {
+	// добавим информацию о пользователях в чате
+	builderUsers := sq.Insert(chatUsersTable).
+		PlaceholderFormat(sq.Dollar).
+		Columns(chatIDColumn, userIDColumn)
+
+	for _, userID := range userIDs {
+		builderUsers = builderUsers.Values(chatID, userID)
+	}
+
+	query, args, err := builderUsers.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to build insert_users query: %v", err)
+	}
+
+	q := db.Query{
+		QueryRaw: query,
+		Name:     "chat_repository.AddUsersToChat",
+	}
+
+	if _, err = r.db.DB().ExecContext(ctx, q, args...); err != nil {
+		return fmt.Errorf("failed to add users to chat: %v", err)
+	}
+
+	log.Printf("inserted new users to chat  = %v", chatID)
+
+	return nil
 }
 
 // DeleteChat удаление чата из базы данных
@@ -82,7 +115,7 @@ func (r *repo) DeleteChat(ctx context.Context, id int64) (*emptypb.Empty, error)
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		log.Fatalf("failed to build query: %v", err)
+		return nil, fmt.Errorf("failed to build query: %v", err)
 	}
 
 	q := db.Query{
@@ -91,7 +124,7 @@ func (r *repo) DeleteChat(ctx context.Context, id int64) (*emptypb.Empty, error)
 	}
 
 	if _, err = r.db.DB().ExecContext(ctx, q, args...); err != nil {
-		log.Fatalf("failed to update chat: %v", err)
+		return nil, fmt.Errorf("failed to update chat: %v", err)
 	}
 	return nil, nil
 }
@@ -102,12 +135,11 @@ func (r *repo) SendMessage(ctx context.Context, info *model.MessageInfo) (*empty
 	builder := sq.Insert(messagesTable).
 		PlaceholderFormat(sq.Dollar).
 		Columns(chatIDColumn, userIDColumn, bodyColumn).
-		Values(info.ChatID, info.UserID, info.Body).
-		Suffix("returning id")
+		Values(info.ChatID, info.UserID, info.Body)
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		log.Fatalf("failed to build query: %v", err)
+		return nil, fmt.Errorf("failed to build query: %v", err)
 	}
 
 	q := db.Query{
@@ -116,7 +148,7 @@ func (r *repo) SendMessage(ctx context.Context, info *model.MessageInfo) (*empty
 	}
 
 	if _, err = r.db.DB().ExecContext(ctx, q, args...); err != nil {
-		log.Fatalf("failed to send message: %v", err)
+		return nil, fmt.Errorf("failed to send message: %v", err)
 	}
 	return nil, nil
 }
@@ -133,7 +165,7 @@ func (r *repo) GetChatMessages(ctx context.Context, id int64) ([]*model.Message,
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		log.Fatalf("failed to build query: %v", err)
+		return nil, fmt.Errorf("failed to build query: %v", err)
 	}
 
 	q := db.Query{
@@ -144,7 +176,7 @@ func (r *repo) GetChatMessages(ctx context.Context, id int64) ([]*model.Message,
 	var messagesRepo []*modelRepo.Message
 	err = r.db.DB().ScanAllContext(ctx, &messagesRepo, q, args...)
 	if err != nil {
-		log.Fatalf("failed to get messages: %v", err)
+		return nil, fmt.Errorf("failed to get messages: %v", err)
 	}
 
 	return converter.ToMessagesFromRepo(messagesRepo), nil

@@ -2,7 +2,6 @@ package chat
 
 import (
 	"context"
-	"log"
 
 	"github.com/spv-dev/chat-server/internal/model"
 )
@@ -12,8 +11,12 @@ func (s *serv) CreateChat(ctx context.Context, info *model.ChatInfo) (int64, err
 	var id int64
 	err := s.txManager.ReadCommited(ctx, func(ctx context.Context) error {
 		var errTx error
-		log.Println("createchat service")
 		id, errTx = s.chatRepository.CreateChat(ctx, info)
+		if errTx != nil {
+			return errTx
+		}
+
+		errTx = s.chatRepository.AddUsersToChat(ctx, id, info.UserIDs)
 		if errTx != nil {
 			return errTx
 		}

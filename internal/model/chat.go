@@ -1,20 +1,21 @@
 package model
 
 import (
-	"database/sql"
 	"time"
 )
 
+// Chat структура чата
 type Chat struct {
-	ID        int64
-	Info      ChatInfo
-	State     int32
-	CreatedAt time.Time
-	UpdatedAt sql.NullTime
-	DeletedAt sql.NullTime
+	ID        int64      `db:"id"`
+	Info      ChatInfo   `db:""`
+	State     int32      `db:"state"`
+	CreatedAt time.Time  `db:"created_at"`
+	UpdatedAt *time.Time `db:"updated_at,omitempty"`
+	DeletedAt *time.Time `db:"deleted_at,omitempty"`
 }
 
+// ChatInfo структура информации о чате
 type ChatInfo struct {
-	Title   string
-	UserIds []int64
+	Title   string `db:"title"`
+	UserIDs []int64
 }

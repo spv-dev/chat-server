@@ -2,16 +2,23 @@ package chat
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/spv-dev/chat-server/internal/model"
-	"google.golang.org/protobuf/types/known/emptypb"
+	"github.com/spv-dev/chat-server/internal/validator"
 )
 
-// CreateChat проверяет чат и отправляет на создание в слой БД
-func (s *serv) SendMessage(ctx context.Context, info *model.MessageInfo) (*emptypb.Empty, error) {
+// SendMessage проверяет сообщение и отправляет в слой БД
+func (s *serv) SendMessage(ctx context.Context, info *model.MessageInfo) error {
+	if info == nil {
+		return fmt.Errorf("Пустая информация о сообщении")
+	}
+	if err := validator.CheckBody(info.Body); err != nil {
+		return err
+	}
 	err := s.txManager.ReadCommited(ctx, func(ctx context.Context) error {
 		var errTx error
-		_, errTx = s.chatRepository.SendMessage(ctx, info)
+		errTx = s.chatRepository.SendMessage(ctx, info)
 		if errTx != nil {
 			return errTx
 		}
@@ -20,8 +27,8 @@ func (s *serv) SendMessage(ctx context.Context, info *model.MessageInfo) (*empty
 	})
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return nil, nil
+	return nil
 }

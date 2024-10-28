@@ -7,7 +7,7 @@ import (
 	desc "github.com/spv-dev/chat-server/pkg/chat_v1"
 )
 
-// CreateChat создаёт нового пользователя
+// GetChatMessages получение списка сообщений чата
 func (s *Server) GetChatMessages(ctx context.Context, req *desc.GetChatMessagesRequest) (*desc.GetChatMessagesResponse, error) {
 	messages, err := s.chatService.GetChatMessages(ctx, req.Id)
 	if err != nil {

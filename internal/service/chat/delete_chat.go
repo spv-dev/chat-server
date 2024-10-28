@@ -2,15 +2,13 @@ package chat
 
 import (
 	"context"
-
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *serv) DeleteChat(ctx context.Context, id int64) (*emptypb.Empty, error) {
+// DeleteChat удаление чата
+func (s *serv) DeleteChat(ctx context.Context, id int64) error {
 	err := s.txManager.ReadCommited(ctx, func(ctx context.Context) error {
 		var errTx error
-
-		_, errTx = s.chatRepository.DeleteChat(ctx, id)
+		errTx = s.chatRepository.DeleteChat(ctx, id)
 		if errTx != nil {
 			return errTx
 		}
@@ -19,8 +17,8 @@ func (s *serv) DeleteChat(ctx context.Context, id int64) (*emptypb.Empty, error)
 	})
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return nil, nil
+	return nil
 }

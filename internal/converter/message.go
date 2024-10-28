@@ -1,9 +1,10 @@
 package converter
 
 import (
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/spv-dev/chat-server/internal/model"
 	desc "github.com/spv-dev/chat-server/pkg/chat_v1"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // ToMessageInfoFromDesc конвертер MessageInfo из API слоя в сервисный слой

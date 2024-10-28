@@ -19,6 +19,8 @@ const (
 	userIDColumn  = "user_id"
 	typeColumn    = "type_id"
 	bodyColumn    = "body"
+
+	chatUsersTable = "chat_users"
 )
 
 type repo struct {

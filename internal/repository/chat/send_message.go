@@ -17,9 +17,9 @@ func (r *repo) SendMessage(ctx context.Context, info *model.MessageInfo) error {
 	}
 	// добавим информацию о чате
 	builder := sq.Insert(messagesTable).
-		PlaceholderFormat(sq.Dollar).
 		Columns(chatIDColumn, userIDColumn, bodyColumn).
-		Values(info.ChatID, info.UserID, info.Body)
+		Values(info.ChatID, info.UserID, info.Body).
+		PlaceholderFormat(sq.Dollar)
 
 	query, args, err := builder.ToSql()
 	if err != nil {

@@ -11,5 +11,6 @@ func CheckBody(body string) error {
 	if len(body) == 0 {
 		return fmt.Errorf(errBodyIsEmpty)
 	}
+
 	return nil
 }

@@ -11,8 +11,7 @@ import (
 
 // SendMessage отправка сообщения в чат
 func (s *Server) SendMessage(ctx context.Context, req *desc.SendMessageRequest) (*emptypb.Empty, error) {
-	info := converter.ToMessageInfoFromDesc(req.GetInfo())
-	err := s.chatService.SendMessage(ctx, &info)
+	err := s.chatService.SendMessage(ctx, converter.ToMessageInfoFromDesc(req.GetInfo()))
 	if err != nil {
 		return nil, err
 	}

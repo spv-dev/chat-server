@@ -17,10 +17,10 @@ func (r *repo) CreateChat(ctx context.Context, info *model.ChatInfo) (int64, err
 		return 0, fmt.Errorf("Пустая структура при добавлении чата")
 	}
 	builder := sq.Insert(tableName).
-		PlaceholderFormat(sq.Dollar).
 		Columns(titleColumn).
 		Values(info.Title).
-		Suffix("returning id")
+		Suffix("returning id").
+		PlaceholderFormat(sq.Dollar)
 
 	query, args, err := builder.ToSql()
 	if err != nil {

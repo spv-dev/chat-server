@@ -14,10 +14,10 @@ import (
 func (r *repo) DeleteChat(ctx context.Context, id int64) error {
 	// будем не удалять информацию о чате, а менять статус
 	builder := sq.Update(tableName).
-		PlaceholderFormat(sq.Dollar).
 		Set(stateColumn, 0).
 		Set(deletedAtColumn, time.Now()).
-		Where(sq.Eq{idColumn: id})
+		Where(sq.Eq{idColumn: id}).
+		PlaceholderFormat(sq.Dollar)
 
 	query, args, err := builder.ToSql()
 	if err != nil {

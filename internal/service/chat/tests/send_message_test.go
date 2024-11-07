@@ -72,6 +72,38 @@ func TestSendMessage(t *testing.T) {
 			},
 		},
 		{
+			name: "Error Empty Message",
+			args: args{
+				ctx: ctx,
+				req: nil,
+			},
+			err: fmt.Errorf("Пустая информация о сообщении"),
+			chatRepositoryMock: func(mc *minimock.Controller) repository.ChatRepository {
+				return repoMocks.NewChatRepositoryMock(mc)
+			},
+			dbMockFunc: func(_ *minimock.Controller) db.TxManager {
+				return dbMock.NewTxManagerMock(t)
+			},
+		},
+		{
+			name: "Error Empty Message Body",
+			args: args{
+				ctx: ctx,
+				req: &model.MessageInfo{
+					Body:   "",
+					ChatID: 10,
+					UserID: 40,
+				},
+			},
+			err: fmt.Errorf("Тело сообщения пустое"),
+			chatRepositoryMock: func(mc *minimock.Controller) repository.ChatRepository {
+				return repoMocks.NewChatRepositoryMock(mc)
+			},
+			dbMockFunc: func(_ *minimock.Controller) db.TxManager {
+				return dbMock.NewTxManagerMock(t)
+			},
+		},
+		{
 			name: "Error Send Message",
 			args: args{
 				ctx: ctx,

@@ -18,7 +18,7 @@ import (
 )
 
 func TestCreateChat(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()
 	type chatRepositoryMockFunc func(mc *minimock.Controller) repository.ChatRepository
 	type txManagerMockFunc func(mc *minimock.Controller) db.TxManager
 
@@ -38,8 +38,11 @@ func TestCreateChat(t *testing.T) {
 			UserIDs: []int64{gofakeit.Int64(), gofakeit.Int64(), gofakeit.Int64()},
 		}
 
-		resp    = gofakeit.Int64()
-		repoErr = fmt.Errorf("repo error")
+		resp          = gofakeit.Int64()
+		repoErr       = fmt.Errorf("repo error")
+		emptyErr      = fmt.Errorf("Пустая информация о чате")
+		emptyTitleErr = fmt.Errorf("Пустое наименование чата")
+		addUsersError = fmt.Errorf("error add user")
 	)
 
 	tests := []struct {
@@ -74,6 +77,63 @@ func TestCreateChat(t *testing.T) {
 			},
 		},
 		{
+			name: "Error Add Users",
+			args: args{
+				ctx: ctx,
+				req: req,
+			},
+			wait: 0,
+			err:  addUsersError,
+			chatRepositoryMock: func(mc *minimock.Controller) repository.ChatRepository {
+				mock := repoMocks.NewChatRepositoryMock(mc)
+				mock.CreateChatMock.Expect(ctx, req).Return(resp, nil)
+				mock.AddUsersToChatMock.Expect(ctx, resp, req.UserIDs).Return(addUsersError)
+
+				return mock
+			},
+			dbMockFunc: func(_ *minimock.Controller) db.TxManager {
+				mock := dbMock.NewTxManagerMock(t)
+				mock.ReadCommitedMock.Set(func(ctx context.Context, handler db.Handler) error {
+					return handler(ctx)
+				})
+
+				return mock
+			},
+		},
+		{
+			name: "Empty Chat Info",
+			args: args{
+				ctx: ctx,
+				req: nil,
+			},
+			wait: 0,
+			err:  emptyErr,
+			chatRepositoryMock: func(mc *minimock.Controller) repository.ChatRepository {
+				return repoMocks.NewChatRepositoryMock(mc)
+			},
+			dbMockFunc: func(_ *minimock.Controller) db.TxManager {
+				return dbMock.NewTxManagerMock(t)
+			},
+		},
+		{
+			name: "Empty Title",
+			args: args{
+				ctx: ctx,
+				req: &model.ChatInfo{
+					Title:   "",
+					UserIDs: []int64{23, 33, 44},
+				},
+			},
+			wait: 0,
+			err:  emptyTitleErr,
+			chatRepositoryMock: func(mc *minimock.Controller) repository.ChatRepository {
+				return repoMocks.NewChatRepositoryMock(mc)
+			},
+			dbMockFunc: func(_ *minimock.Controller) db.TxManager {
+				return dbMock.NewTxManagerMock(t)
+			},
+		},
+		{
 			name: "Error Create Chat",
 			args: args{
 				ctx: ctx,
@@ -100,7 +160,7 @@ func TestCreateChat(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+			//t.Parallel()
 			chatRepoMock := tt.chatRepositoryMock(mc)
 			txManagerMock := tt.dbMockFunc(mc)
 			service := chat.NewService(chatRepoMock, txManagerMock)

@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/spv-dev/platform_common/pkg/db"
 
-	"github.com/spv-dev/chat-server/internal/client/db"
 	"github.com/spv-dev/chat-server/internal/model"
 )
 

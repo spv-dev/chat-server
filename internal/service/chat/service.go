@@ -1,7 +1,8 @@
 package chat
 
 import (
-	"github.com/spv-dev/chat-server/internal/client/db"
+	"github.com/spv-dev/platform_common/pkg/db"
+
 	"github.com/spv-dev/chat-server/internal/repository"
 	"github.com/spv-dev/chat-server/internal/service"
 )

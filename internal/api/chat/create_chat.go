@@ -9,8 +9,7 @@ import (
 
 // CreateChat создаёт нового пользователя
 func (s *Server) CreateChat(ctx context.Context, req *desc.CreateChatRequest) (*desc.CreateChatResponse, error) {
-	info := converter.ToChatInfoFromDesc(req.GetInfo())
-	id, err := s.chatService.CreateChat(ctx, &info)
+	id, err := s.chatService.CreateChat(ctx, converter.ToChatInfoFromDesc(req.GetInfo()))
 	if err != nil {
 		return nil, err
 	}

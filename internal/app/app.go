@@ -9,9 +9,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/spv-dev/chat-server/internal/closer"
 	"github.com/spv-dev/chat-server/internal/config"
 	desc "github.com/spv-dev/chat-server/pkg/chat_v1"
+	"github.com/spv-dev/platform_common/pkg/closer"
 )
 
 // App структура приложения

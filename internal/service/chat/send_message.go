@@ -13,9 +13,11 @@ func (s *serv) SendMessage(ctx context.Context, info *model.MessageInfo) error {
 	if info == nil {
 		return fmt.Errorf("Пустая информация о сообщении")
 	}
+
 	if err := validator.CheckBody(info.Body); err != nil {
 		return err
 	}
+
 	err := s.txManager.ReadCommited(ctx, func(ctx context.Context) error {
 		var errTx error
 		errTx = s.chatRepository.SendMessage(ctx, info)

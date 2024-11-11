@@ -6,18 +6,17 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-
-	"github.com/spv-dev/chat-server/internal/client/db"
+	"github.com/spv-dev/platform_common/pkg/db"
 )
 
 // DeleteChat удаление чата из БД
 func (r *repo) DeleteChat(ctx context.Context, id int64) error {
 	// будем не удалять информацию о чате, а менять статус
 	builder := sq.Update(tableName).
-		PlaceholderFormat(sq.Dollar).
 		Set(stateColumn, 0).
 		Set(deletedAtColumn, time.Now()).
-		Where(sq.Eq{idColumn: id})
+		Where(sq.Eq{idColumn: id}).
+		PlaceholderFormat(sq.Dollar)
 
 	query, args, err := builder.ToSql()
 	if err != nil {

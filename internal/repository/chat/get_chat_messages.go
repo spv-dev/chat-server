@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/spv-dev/platform_common/pkg/db"
 
-	"github.com/spv-dev/chat-server/internal/client/db"
 	"github.com/spv-dev/chat-server/internal/model"
 )
 
@@ -14,11 +14,11 @@ import (
 func (r *repo) GetChatMessages(ctx context.Context, id int64) ([]*model.Message, error) {
 	// будем не удалять информацию о чате, а менять статус
 	builder := sq.Select(idColumn, userIDColumn, bodyColumn, createdAtColumn, typeColumn, stateColumn).
-		PlaceholderFormat(sq.Dollar).
 		From(messagesTable).
 		Where(sq.Eq{chatIDColumn: id, stateColumn: 1}).
 		OrderBy("created_at DESC").
-		Limit(20)
+		Limit(20).
+		PlaceholderFormat(sq.Dollar)
 
 	query, args, err := builder.ToSql()
 	if err != nil {

@@ -8,11 +8,11 @@ import (
 )
 
 // ToMessageInfoFromDesc конвертер MessageInfo из API слоя в сервисный слой
-func ToMessageInfoFromDesc(info *desc.MessageInfo) model.MessageInfo {
+func ToMessageInfoFromDesc(info *desc.MessageInfo) *model.MessageInfo {
 	if info == nil {
-		return model.MessageInfo{}
+		return &model.MessageInfo{}
 	}
-	return model.MessageInfo{
+	return &model.MessageInfo{
 		ChatID: info.ChatId,
 		UserID: info.UserId,
 		Body:   info.Body,
@@ -39,7 +39,7 @@ func ToMessagesFromService(messages []*model.Message) []*desc.Message {
 			Info: &desc.MessageInfo{
 				Body:   mess.Info.Body,
 				UserId: mess.Info.UserID,
-				ChatId: mess.Info.UserID,
+				ChatId: mess.Info.ChatID,
 			},
 			CreatedAt: timestamppb.New(mess.CreatedAt),
 			UpdatedAt: updatedAt,

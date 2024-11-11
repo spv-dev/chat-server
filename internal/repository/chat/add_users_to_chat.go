@@ -6,16 +6,15 @@ import (
 	"log"
 
 	sq "github.com/Masterminds/squirrel"
-
-	"github.com/spv-dev/chat-server/internal/client/db"
+	"github.com/spv-dev/platform_common/pkg/db"
 )
 
 // AddUsersToChat добавление пользователей в чат
 func (r *repo) AddUsersToChat(ctx context.Context, chatID int64, userIDs []int64) error {
 	// добавим информацию о пользователях в чате
 	builderUsers := sq.Insert(chatUsersTable).
-		PlaceholderFormat(sq.Dollar).
-		Columns(chatIDColumn, userIDColumn)
+		Columns(chatIDColumn, userIDColumn).
+		PlaceholderFormat(sq.Dollar)
 
 	for _, userID := range userIDs {
 		builderUsers = builderUsers.Values(chatID, userID)

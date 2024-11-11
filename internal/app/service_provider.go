@@ -4,11 +4,12 @@ import (
 	"context"
 	"log"
 
+	"github.com/spv-dev/platform_common/pkg/closer"
+	"github.com/spv-dev/platform_common/pkg/db"
+	"github.com/spv-dev/platform_common/pkg/db/pg"
+	"github.com/spv-dev/platform_common/pkg/db/transaction"
+
 	"github.com/spv-dev/chat-server/internal/api/chat"
-	"github.com/spv-dev/chat-server/internal/client/db"
-	"github.com/spv-dev/chat-server/internal/client/db/pg"
-	"github.com/spv-dev/chat-server/internal/client/db/transaction"
-	"github.com/spv-dev/chat-server/internal/closer"
 	"github.com/spv-dev/chat-server/internal/config"
 	"github.com/spv-dev/chat-server/internal/repository"
 	chatRepository "github.com/spv-dev/chat-server/internal/repository/chat"

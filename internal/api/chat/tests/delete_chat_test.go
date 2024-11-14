@@ -2,89 +2,53 @@ package tests
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/brianvoe/gofakeit"
 	"github.com/gojuno/minimock/v3"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/emptypb"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/spv-dev/chat-server/internal/api/chat"
-	"github.com/spv-dev/chat-server/internal/service"
 	serviceMocks "github.com/spv-dev/chat-server/internal/service/mocks"
 	desc "github.com/spv-dev/chat-server/pkg/chat_v1"
 )
 
 func TestDeleteChat(t *testing.T) {
 	t.Parallel()
-	type chatServiceMockFunc func(mc *minimock.Controller) service.ChatService
 
-	type args struct {
-		ctx context.Context
-		req *desc.DeleteChatRequest
+	ctx := context.Background()
+
+	chatID := gofakeit.Int64()
+
+	req := &desc.DeleteChatRequest{
+		Id: chatID,
 	}
 
-	var (
-		ctx = context.Background()
-		mc  = minimock.NewController(t)
+	mc := minimock.NewController(t)
 
-		id = gofakeit.Int64()
+	service := serviceMocks.NewChatServiceMock(mc)
 
-		serviceErr = fmt.Errorf("service error")
+	api := chat.NewServer(service)
 
-		req = &desc.DeleteChatRequest{
-			Id: id,
-		}
-	)
+	t.Run("delete chat success", func(t *testing.T) {
+		t.Parallel()
 
-	tests := []struct {
-		name            string
-		args            args
-		want            *emptypb.Empty
-		err             error
-		chatServiceMock chatServiceMockFunc
-	}{
-		{
-			name: "Success Delete Chat",
-			args: args{
-				ctx: ctx,
-				req: req,
-			},
-			want: nil,
-			err:  nil,
-			chatServiceMock: func(mc *minimock.Controller) service.ChatService {
-				mock := serviceMocks.NewChatServiceMock(mc)
-				mock.DeleteChatMock.Expect(ctx, req.Id).Return(nil)
-				return mock
-			},
-		},
-		{
-			name: "Error Delete Chat",
-			args: args{
-				ctx: ctx,
-				req: req,
-			},
-			want: nil,
-			err:  serviceErr,
-			chatServiceMock: func(mc *minimock.Controller) service.ChatService {
-				mock := serviceMocks.NewChatServiceMock(mc)
-				mock.DeleteChatMock.Expect(ctx, req.Id).Return(serviceErr)
-				return mock
-			},
-		},
-	}
+		service.DeleteChatMock.Expect(ctx, chatID).Return(nil)
 
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			chatServiceMock := tt.chatServiceMock(mc)
-			api := chat.NewServer(chatServiceMock)
+		_, err := api.DeleteChat(ctx, req)
 
-			res, err := api.DeleteChat(tt.args.ctx, tt.args.req)
-			require.Equal(t, tt.err, err)
-			require.Equal(t, tt.want, res)
-		})
-	}
+		assert.NoError(t, err)
+	})
+
+	serviceErr := errors.New("service error")
+	t.Run("delete chat error", func(t *testing.T) {
+		t.Parallel()
+
+		service.DeleteChatMock.Expect(ctx, chatID).Return(serviceErr)
+
+		_, err := api.DeleteChat(ctx, req)
+
+		assert.Equal(t, err, serviceErr)
+	})
 }

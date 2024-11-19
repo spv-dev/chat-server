@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	host = "localhost:50051"
+	host = "localhost:50061"
 	id   = 13
 )
 

@@ -11,6 +11,7 @@ import (
 
 	"github.com/spv-dev/chat-server/internal/api/chat"
 	"github.com/spv-dev/chat-server/internal/config"
+	"github.com/spv-dev/chat-server/internal/interceptor"
 	"github.com/spv-dev/chat-server/internal/repository"
 	chatRepository "github.com/spv-dev/chat-server/internal/repository/chat"
 	"github.com/spv-dev/chat-server/internal/service"
@@ -28,6 +29,8 @@ type serviceProvider struct {
 	chatService service.ChatService
 
 	chatServer *chat.Server
+
+	accessInterceptor *interceptor.AccessInterceptor
 }
 
 func newServiceProvider() *serviceProvider {
@@ -116,4 +119,12 @@ func (s *serviceProvider) ChatServer(ctx context.Context) *chat.Server {
 	}
 
 	return s.chatServer
+}
+
+func (s *serviceProvider) AccessInterceptor(_ context.Context) *interceptor.AccessInterceptor {
+	if s.accessInterceptor == nil {
+		s.accessInterceptor = interceptor.NewAccessInterceptor()
+	}
+
+	return s.accessInterceptor
 }

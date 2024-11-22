@@ -1,12 +1,15 @@
 module github.com/spv-dev/chat-server
 
-go 1.22.2
+go 1.22.7
+
+toolchain go1.22.9
 
 require (
 	github.com/gojuno/minimock/v3 v3.4.1
+	github.com/spv-dev/auth v0.0.0-20241118125442-3eebc73c244b
 	github.com/stretchr/testify v1.9.0
-	google.golang.org/grpc v1.67.1
-	google.golang.org/protobuf v1.34.2
+	google.golang.org/grpc v1.68.0
+	google.golang.org/protobuf v1.35.1
 )
 
 require (
@@ -37,5 +40,5 @@ require (
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/text v0.19.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240930140551-af27646dc61f // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241021214115-324edc3d5d38 // indirect
 )

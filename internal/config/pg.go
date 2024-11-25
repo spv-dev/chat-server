@@ -3,6 +3,8 @@ package config
 import (
 	"errors"
 	"os"
+
+	"github.com/spv-dev/chat-server/internal/serviceerror"
 )
 
 const (
@@ -22,7 +24,7 @@ type pgConfig struct {
 func NewPGConfig() (*pgConfig, error) {
 	dsn := os.Getenv(dsnEnvName)
 	if len(dsn) == 0 {
-		return nil, errors.New("pg dsn not found")
+		return nil, errors.New(serviceerror.PGDsnNotFound)
 	}
 
 	return &pgConfig{

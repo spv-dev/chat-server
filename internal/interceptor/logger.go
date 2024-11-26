@@ -10,6 +10,7 @@ import (
 	"github.com/spv-dev/chat-server/internal/logger"
 )
 
+// LogInterceptor интерцептор для сбора логов по входящим запросам
 func LogInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	now := time.Now()
 

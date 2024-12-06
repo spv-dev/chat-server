@@ -2,16 +2,25 @@ package app
 
 import (
 	"context"
+	"flag"
 	"log"
 	"net"
+	"net/http"
+	"sync"
+	"time"
 
+	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/spv-dev/platform_common/pkg/closer"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/spv-dev/chat-server/internal/config"
+	"github.com/spv-dev/chat-server/internal/interceptor"
+	"github.com/spv-dev/chat-server/internal/logger"
+	"github.com/spv-dev/chat-server/internal/metric"
 	desc "github.com/spv-dev/chat-server/pkg/chat_v1"
-	"github.com/spv-dev/platform_common/pkg/closer"
 )
 
 // App структура приложения
@@ -39,7 +48,28 @@ func (a *App) Run() error {
 		closer.Wait()
 	}()
 
-	return a.runGRPCServer()
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		err := a.runGRPCServer()
+		if err != nil {
+			log.Fatalf("failed to run gRPC server")
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		err := a.runPrometheus()
+		if err != nil {
+			log.Fatalf("failed to run Prometheus server")
+		}
+	}()
+
+	wg.Wait()
+
+	return nil
 }
 
 func (a *App) initDeps(ctx context.Context) error {
@@ -75,7 +105,13 @@ func (a *App) initServiceProvider(_ context.Context) error {
 func (a *App) initGRPCServer(ctx context.Context) error {
 	a.grpcServer = grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
-		grpc.UnaryInterceptor(a.serviceProvider.AccessInterceptor(ctx).AccessInterceptor),
+		grpc.UnaryInterceptor(
+			grpcMiddleware.ChainUnaryServer(
+				interceptor.LogInterceptor,
+				interceptor.MetricsInterceptor,
+				//a.serviceProvider.AccessInterceptor(ctx).AccessInterceptor,
+			),
+		),
 	)
 
 	reflection.Register(a.grpcServer)
@@ -88,15 +124,42 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 func (a *App) runGRPCServer() error {
 	log.Printf("GRPC server is runnign on %v", a.serviceProvider.GRPCConfig().Address())
 
-	list, err := net.Listen("tcp", a.serviceProvider.GRPCConfig().Address())
+	flag.Parse()
 
+	list, err := net.Listen("tcp", a.serviceProvider.GRPCConfig().Address())
 	if err != nil {
 		return err
 	}
+
+	err = metric.DefaultInit()
+	if err != nil {
+		log.Fatalf("failed to init metrics: %v", err)
+	}
+	logger.DefaultInit()
 
 	err = a.grpcServer.Serve(list)
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (a *App) runPrometheus() error {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+
+	prometheusServer := &http.Server{
+		Addr:              "localhost:2112",
+		Handler:           mux,
+		ReadHeaderTimeout: time.Second * 5,
+	}
+
+	log.Printf("Prometheus server is running on %v", "localhost:2112")
+
+	err := prometheusServer.ListenAndServe()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

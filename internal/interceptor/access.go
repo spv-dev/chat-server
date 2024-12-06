@@ -7,10 +7,12 @@ import (
 	"log"
 	"strings"
 
-	accessDesc "github.com/spv-dev/auth/pkg/access_v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+
+	accessDesc "github.com/spv-dev/auth/pkg/access_v1"
+	"github.com/spv-dev/chat-server/internal/serviceerror"
 )
 
 const (
@@ -27,19 +29,17 @@ type AccessInterceptor struct {
 func (accessInterceptor AccessInterceptor) AccessInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, errors.New("error in metadata")
+		return nil, errors.New(serviceerror.ErrorInMetadata)
 	}
 
 	accessHeader, ok := md["authorization"]
 	if !ok || len(accessHeader) == 0 {
-		return nil, errors.New("error in header")
+		return nil, errors.New(serviceerror.ErrorInHeader)
 	}
 
 	if !strings.HasPrefix(accessHeader[0], accessPrefix) {
-		return nil, errors.New("failed in bearer")
+		return nil, errors.New(serviceerror.FailedInBearer)
 	}
-
-	// accessToken := strings.TrimPrefix(accessHeader[0], accessPrefix)
 
 	clientCtx := context.Background()
 	clientCtx = metadata.NewOutgoingContext(clientCtx, md)

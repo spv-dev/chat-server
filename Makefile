@@ -9,6 +9,7 @@ install-deps:
 	GOBIN=$(LOCAL_BIN) go install -mod=mod google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@v3.14.0
 	GOBIN=$(LOCAL_BIN) go install github.com/gojuno/minimock/v3/cmd/minimock@v3.4.1
+	GOBIN=$(LOCAL_BIN) go install github.com/bojand/ghz/cmd/ghz@0.120.0
 
 get-deps:
 	go get -u github.com/brianvoe/gofakeit
@@ -59,3 +60,14 @@ test-coverage:
 	go tool cover -html=coverage.out;
 	go tool cover -func=./coverage.out | grep "total";
 	grep -sqFx "/coverage.out" .gitignore || echo "/coverage.out" >> .gitignore
+
+
+grpc-load-test:
+	$(LOCAL_BIN)/ghz \
+		--proto api/chat_v1/chat.proto \
+		--call ChatV1.GetChatMessages \
+		--data '{"id": 3}' \
+		--rps 20 \
+		--total 100 \
+		--insecure \
+		localhost:50061

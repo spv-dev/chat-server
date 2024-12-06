@@ -15,4 +15,13 @@ const (
 	ErrorInHeader = "error in header"
 	// FailedInBearer "failed in bearer"
 	FailedInBearer = "failed in bearer"
+
+	// PrometheusHostNotFound "prometheus host not found"
+	PrometheusHostNotFound = "prometheus host not found"
+	// PrometheusPortNotFound "prometheus port not found"
+	PrometheusPortNotFound = "prometheus port not found"
+	// PrometheusTimeoutNotFound "prometheus timeout not found"
+	PrometheusTimeoutNotFound = "prometheus timeout not found"
+	// FailedToConvertPrometheusTimeout "failed to convert timeout"
+	FailedToConvertPrometheusTimeout = "failed to convert timeout"
 )

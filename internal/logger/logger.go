@@ -10,6 +10,12 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+const (
+	logMaxSizeMB  = 10 // megabytes
+	logMaxBackups = 3  // count
+	logMaxAgeDays = 7  // days
+)
+
 var globalLogger *zap.Logger
 
 var logLevel = flag.String("l", "info", "log level")
@@ -61,9 +67,9 @@ func getCore(level zap.AtomicLevel) zapcore.Core {
 	file := zapcore.AddSync(
 		&lumberjack.Logger{
 			Filename:   "logs/app.log",
-			MaxSize:    10,
-			MaxBackups: 3,
-			MaxAge:     7,
+			MaxSize:    logMaxSizeMB,
+			MaxBackups: logMaxBackups,
+			MaxAge:     logMaxAgeDays,
 		},
 	)
 

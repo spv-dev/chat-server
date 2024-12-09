@@ -20,7 +20,7 @@ type Server struct {
 	chats  map[int64]*Chat
 	mxChat sync.RWMutex
 
-	channels  map[int64]chan *desc.MessageInfo
+	channels  map[int64]chan *desc.Message
 	mxChannel sync.RWMutex
 }
 
@@ -29,6 +29,6 @@ func NewServer(chatService service.ChatService) *Server {
 	return &Server{
 		chatService: chatService,
 		chats:       make(map[int64]*Chat),
-		channels:    make(map[int64]chan *desc.MessageInfo),
+		channels:    make(map[int64]chan *desc.Message),
 	}
 }

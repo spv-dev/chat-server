@@ -37,6 +37,17 @@ func TestSendMessage(t *testing.T) {
 		UserID: userID,
 	}
 
+	messObj := model.Message{
+		ID:    gofakeit.Int64(),
+		State: 1,
+		Type:  10,
+		Info: model.MessageInfo{
+			ChatID: 10,
+			UserID: 100500,
+			Body:   "Test message",
+		},
+	}
+
 	mc := minimock.NewController(t)
 
 	repo := repoMocks.NewChatRepositoryMock(mc)
@@ -47,26 +58,27 @@ func TestSendMessage(t *testing.T) {
 	t.Run("send message success", func(t *testing.T) {
 		t.Parallel()
 
-		repo.SendMessageMock.Expect(ctx, req).Return(nil)
+		repo.SendMessageMock.Expect(ctx, req).Return(messObj, nil)
 		trans.ReadCommitedMock.Set(func(ctx context.Context, handler db.Handler) error {
 			return handler(ctx)
 		})
 
-		err := service.SendMessage(ctx, req)
+		message, err := service.SendMessage(ctx, req)
 
 		assert.NoError(t, err)
+		assert.Equal(t, messObj, message)
 	})
 
 	repoErr := errors.New("repo error")
 	t.Run("send message error", func(t *testing.T) {
 		t.Parallel()
 
-		repo.SendMessageMock.Expect(ctx, req).Return(repoErr)
+		repo.SendMessageMock.Expect(ctx, req).Return(model.Message{}, repoErr)
 		trans.ReadCommitedMock.Set(func(ctx context.Context, handler db.Handler) error {
 			return handler(ctx)
 		})
 
-		err := service.SendMessage(ctx, req)
+		_, err := service.SendMessage(ctx, req)
 
 		assert.Equal(t, err, repoErr)
 	})
@@ -75,7 +87,7 @@ func TestSendMessage(t *testing.T) {
 	t.Run("send message empty message error", func(t *testing.T) {
 		t.Parallel()
 
-		err := service.SendMessage(ctx, nil)
+		_, err := service.SendMessage(ctx, nil)
 
 		assert.Equal(t, err, errEmptyMessageInfo)
 	})
@@ -84,7 +96,7 @@ func TestSendMessage(t *testing.T) {
 	t.Run("send message empty message body error", func(t *testing.T) {
 		t.Parallel()
 
-		err := service.SendMessage(ctx, reqEmptyBody)
+		_, err := service.SendMessage(ctx, reqEmptyBody)
 
 		assert.Equal(t, err, errEmptyMessageBody)
 	})

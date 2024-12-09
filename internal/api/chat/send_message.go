@@ -5,21 +5,19 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/spv-dev/chat-server/internal/converter"
 	desc "github.com/spv-dev/chat-server/pkg/chat_v1"
 )
 
 // SendMessage отправка сообщения в чат
-func (s *Server) SendMessage(ctx context.Context, req *desc.SendMessageRequest) (*emptypb.Empty, error) {
-	/*
-		err := s.chatService.SendMessage(ctx, converter.ToMessageInfoFromDesc(req.GetInfo()))
-		if err != nil {
-			return nil, err
-		}
+func (s *Server) SendMessage(ctx context.Context, req *desc.SendMessageRequest) (*desc.SendMessageResponse, error) {
 
-		return nil, nil
-	*/
+	message, err := s.chatService.SendMessage(ctx, converter.ToMessageInfoFromDesc(req.GetInfo()))
+	if err != nil {
+		return nil, err
+	}
+
 	s.mxChannel.RLock()
 	chatChan, ok := s.channels[req.Info.GetChatId()]
 	s.mxChannel.RUnlock()
@@ -28,7 +26,11 @@ func (s *Server) SendMessage(ctx context.Context, req *desc.SendMessageRequest) 
 		return nil, status.Errorf(codes.NotFound, "chat not found")
 	}
 
-	chatChan <- req.GetInfo()
+	msg := converter.ToMessageFromModel(&message)
 
-	return &emptypb.Empty{}, nil
+	chatChan <- msg
+
+	return &desc.SendMessageResponse{
+		Message: msg,
+	}, nil
 }

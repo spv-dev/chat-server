@@ -6,10 +6,10 @@ import "google/protobuf/empty.proto";
 option go_package = "github.com/spv-dev/chat-server/pkg/chat_v1;chat_v1";
 
 service ChatV1 {
-    rpc ConnectChat(ConnectChatRequest) returns (stream MessageInfo);
+    rpc ConnectChat(ConnectChatRequest) returns (stream Message);
     rpc CreateChat(CreateChatRequest) returns (CreateChatResponse);
     rpc DeleteChat(DeleteChatRequest) returns (google.protobuf.Empty);
-    rpc SendMessage(SendMessageRequest) returns (google.protobuf.Empty);
+    rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
     rpc GetChatMessages(GetChatMessagesRequest) returns (GetChatMessagesResponse);
 }
 
@@ -53,7 +53,7 @@ message CreateChatRequest {
 }
 
 message CreateChatResponse {
-    int64 id = 1;
+    Chat chat = 1;
 }
 
 message DeleteChatRequest {
@@ -64,8 +64,14 @@ message SendMessageRequest {
     MessageInfo info = 1;
 }
 
+message SendMessageResponse {
+    Message message = 1;
+}
+
 message GetChatMessagesRequest {
     int64 id = 1;
+    uint64 limit = 2;
+    uint64 offset = 3;
 }
 
 message GetChatMessagesResponse {

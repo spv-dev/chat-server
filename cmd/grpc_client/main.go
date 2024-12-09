@@ -32,12 +32,12 @@ func main() {
 	client := desc.NewChatV1Client(conn)
 
 	// Создаем новый чат на сервере
-	chatID, err := createChat(ctx, client)
+	chat, err := createChat(ctx, client)
 	if err != nil {
 		log.Fatalf("failed to create chat: %v", err)
 	}
 
-	log.Printf(fmt.Sprintf("%s: %s\n", color.GreenString("Chat created"), color.YellowString(strconv.FormatInt(chatID, 10))))
+	log.Printf(fmt.Sprintf("%s: %s\n", color.GreenString("Chat created"), color.YellowString(chat.Info.GetTitle())))
 
 	wg := sync.WaitGroup{}
 	wg.Add(2)
@@ -46,7 +46,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 
-		err = connectChat(ctx, client, chatID, 100500, 5*time.Second)
+		err = connectChat(ctx, client, chat.GetId(), 100500, 5*time.Second)
 		if err != nil {
 			log.Fatalf("failed to connect chat: %v", err)
 		}
@@ -56,7 +56,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 
-		err = connectChat(ctx, client, chatID, 5500, 7*time.Second)
+		err = connectChat(ctx, client, chat.GetId(), 5500, 7*time.Second)
 		if err != nil {
 			log.Fatalf("failed to connect chat: %v", err)
 		}
@@ -84,11 +84,14 @@ func connectChat(ctx context.Context, client desc.ChatV1Client, chatID int64, us
 				log.Println("failed to receive message from stream: ", errRecv)
 				return
 			}
+			if userID == message.Info.UserId {
+				continue
+			}
 
 			log.Printf("[%s] - [from: %s]: %s\n",
-				color.YellowString(strconv.FormatInt(message.GetChatId(), 10)),
-				color.BlueString(strconv.FormatInt(message.GetUserId(), 10)),
-				message.GetBody(),
+				color.YellowString(message.GetCreatedAt().AsTime().Format(time.RFC3339)),
+				color.BlueString(strconv.FormatInt(message.Info.GetUserId(), 10)),
+				message.Info.GetBody(),
 			)
 		}
 	}()
@@ -133,11 +136,16 @@ func connectChat(ctx context.Context, client desc.ChatV1Client, chatID int64, us
 	}
 }
 
-func createChat(ctx context.Context, client desc.ChatV1Client) (int64, error) {
-	res, err := client.CreateChat(ctx, &desc.CreateChatRequest{})
+func createChat(ctx context.Context, client desc.ChatV1Client) (*desc.Chat, error) {
+	title := gofakeit.JobTitle()
+	res, err := client.CreateChat(ctx, &desc.CreateChatRequest{
+		Info: &desc.ChatInfo{
+			Title: title,
+		},
+	})
 	if err != nil {
-		return 0, err
+		return &desc.Chat{}, err
 	}
 
-	return res.GetId(), nil
+	return res.Chat, nil
 }

@@ -36,8 +36,10 @@ func (s *Server) ConnectChat(req *desc.ConnectChatRequest, stream desc.ChatV1_Co
 			}
 
 			for _, st := range s.chats[req.GetChatId()].streams {
-				if err := st.Send(msg); err != nil {
-					return err
+				if msg.Info.UserId != req.GetUserId() {
+					if err := st.Send(msg); err != nil {
+						return err
+					}
 				}
 			}
 		case <-stream.Context().Done():

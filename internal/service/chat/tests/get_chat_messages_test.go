@@ -25,6 +25,8 @@ func TestGetChatMessages(t *testing.T) {
 	userID := gofakeit.Int64()
 	state := int32(1)
 	messType := int32(10)
+	limit := gofakeit.Uint64()
+	offset := gofakeit.Uint64()
 
 	id1 := gofakeit.Int64()
 	id2 := gofakeit.Int64()
@@ -84,9 +86,9 @@ func TestGetChatMessages(t *testing.T) {
 	t.Run("get chat messages success", func(t *testing.T) {
 		t.Parallel()
 
-		repo.GetChatMessagesMock.Expect(ctx, chatID).Return(resp, nil)
+		repo.GetChatMessagesMock.Expect(ctx, chatID, limit, offset).Return(resp, nil)
 
-		res, err := service.GetChatMessages(ctx, req)
+		res, err := service.GetChatMessages(ctx, req, limit, offset)
 
 		assert.NoError(t, err)
 		assert.Equal(t, res, resp)
@@ -96,9 +98,9 @@ func TestGetChatMessages(t *testing.T) {
 	t.Run("get chat messages error", func(t *testing.T) {
 		t.Parallel()
 
-		repo.GetChatMessagesMock.Expect(ctx, chatID).Return(nil, repoErr)
+		repo.GetChatMessagesMock.Expect(ctx, chatID, limit, offset).Return(nil, repoErr)
 
-		_, err := service.GetChatMessages(ctx, req)
+		_, err := service.GetChatMessages(ctx, req, limit, offset)
 
 		assert.Equal(t, err, repoErr)
 	})

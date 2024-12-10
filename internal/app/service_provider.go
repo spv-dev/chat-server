@@ -19,8 +19,9 @@ import (
 )
 
 type serviceProvider struct {
-	pgConfig   config.PGConfig
-	grpcConfig config.GRPCConfig
+	pgConfig         config.PGConfig
+	grpcConfig       config.GRPCConfig
+	prometheusConfig config.PrometheusConfig
 
 	dbClient       db.Client
 	txManager      db.TxManager
@@ -61,6 +62,19 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 		s.grpcConfig = cfg
 	}
 	return s.grpcConfig
+}
+
+// PrometheusConfig получение конфигурации для Prometheus
+func (s *serviceProvider) PrometheusConfig() config.PrometheusConfig {
+	if s.prometheusConfig == nil {
+		cfg, err := config.NewPrometheusConfig()
+		if err != nil {
+			log.Fatalf("failed to get prometheus config: %v", err)
+		}
+
+		s.prometheusConfig = cfg
+	}
+	return s.prometheusConfig
 }
 
 // DBClient получение клиента БД

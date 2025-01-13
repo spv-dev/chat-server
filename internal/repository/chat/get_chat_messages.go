@@ -11,13 +11,13 @@ import (
 )
 
 // GetChatMessages получение сообщений чата из БД по идентификатору чата
-func (r *repo) GetChatMessages(ctx context.Context, id int64) ([]*model.Message, error) {
-	// будем не удалять информацию о чате, а менять статус
+func (r *repo) GetChatMessages(ctx context.Context, id int64, limit uint64, offset uint64) ([]*model.Message, error) {
 	builder := sq.Select(idColumn, userIDColumn, bodyColumn, createdAtColumn, typeColumn, stateColumn).
 		From(messagesTable).
 		Where(sq.Eq{chatIDColumn: id, stateColumn: 1}).
 		OrderBy("created_at DESC").
-		Limit(20).
+		Limit(limit).
+		Offset(offset).
 		PlaceholderFormat(sq.Dollar)
 
 	query, args, err := builder.ToSql()

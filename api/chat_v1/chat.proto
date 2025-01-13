@@ -6,9 +6,10 @@ import "google/protobuf/empty.proto";
 option go_package = "github.com/spv-dev/chat-server/pkg/chat_v1;chat_v1";
 
 service ChatV1 {
+    rpc ConnectChat(ConnectChatRequest) returns (stream Message);
     rpc CreateChat(CreateChatRequest) returns (CreateChatResponse);
     rpc DeleteChat(DeleteChatRequest) returns (google.protobuf.Empty);
-    rpc SendMessage(SendMessageRequest) returns (google.protobuf.Empty);
+    rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
     rpc GetChatMessages(GetChatMessagesRequest) returns (GetChatMessagesResponse);
 }
 
@@ -20,7 +21,7 @@ message ChatInfo {
 message Chat {
     int64 id = 1;
     ChatInfo info = 2;
-    int32 state = 3;    
+    int32 state = 3;
     google.protobuf.Timestamp created_at = 4;
     google.protobuf.Timestamp updated_at = 5;
     google.protobuf.Timestamp deleted_at = 6;
@@ -28,8 +29,8 @@ message Chat {
 
 message MessageInfo {
     int64 chat_id = 1;
-    int64 user_id = 2;    
-    string body = 3;    
+    int64 user_id = 2;
+    string body = 3;
 }
 
 message Message {
@@ -42,12 +43,17 @@ message Message {
     google.protobuf.Timestamp deleted_at = 7;
 }
 
+message ConnectChatRequest {
+    int64 chat_id = 1;
+    int64 user_id = 2;
+}
+
 message CreateChatRequest {
     ChatInfo info = 1;
 }
 
 message CreateChatResponse {
-    int64 id = 1;
+    Chat chat = 1;
 }
 
 message DeleteChatRequest {
@@ -58,13 +64,16 @@ message SendMessageRequest {
     MessageInfo info = 1;
 }
 
+message SendMessageResponse {
+    Message message = 1;
+}
+
 message GetChatMessagesRequest {
     int64 id = 1;
+    uint64 limit = 2;
+    uint64 offset = 3;
 }
 
 message GetChatMessagesResponse {
     repeated Message messages = 1;
 }
-
-
-

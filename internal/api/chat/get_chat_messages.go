@@ -9,7 +9,7 @@ import (
 
 // GetChatMessages получение списка сообщений чата
 func (s *Server) GetChatMessages(ctx context.Context, req *desc.GetChatMessagesRequest) (*desc.GetChatMessagesResponse, error) {
-	messages, err := s.chatService.GetChatMessages(ctx, req.Id)
+	messages, err := s.chatService.GetChatMessages(ctx, req.GetId(), req.GetLimit(), req.GetOffset())
 	if err != nil {
 		return nil, err
 	}

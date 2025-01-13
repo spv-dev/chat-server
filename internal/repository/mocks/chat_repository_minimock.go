@@ -26,7 +26,7 @@ type ChatRepositoryMock struct {
 	beforeAddUsersToChatCounter uint64
 	AddUsersToChatMock          mChatRepositoryMockAddUsersToChat
 
-	funcCreateChat          func(ctx context.Context, info *model.ChatInfo) (i1 int64, err error)
+	funcCreateChat          func(ctx context.Context, info *model.ChatInfo) (c2 model.Chat, err error)
 	funcCreateChatOrigin    string
 	inspectFuncCreateChat   func(ctx context.Context, info *model.ChatInfo)
 	afterCreateChatCounter  uint64
@@ -40,14 +40,21 @@ type ChatRepositoryMock struct {
 	beforeDeleteChatCounter uint64
 	DeleteChatMock          mChatRepositoryMockDeleteChat
 
-	funcGetChatMessages          func(ctx context.Context, id int64) (mpa1 []*model.Message, err error)
+	funcGetChatInfo          func(ctx context.Context, id int64) (c2 model.Chat, err error)
+	funcGetChatInfoOrigin    string
+	inspectFuncGetChatInfo   func(ctx context.Context, id int64)
+	afterGetChatInfoCounter  uint64
+	beforeGetChatInfoCounter uint64
+	GetChatInfoMock          mChatRepositoryMockGetChatInfo
+
+	funcGetChatMessages          func(ctx context.Context, id int64, limit uint64, offset uint64) (mpa1 []*model.Message, err error)
 	funcGetChatMessagesOrigin    string
-	inspectFuncGetChatMessages   func(ctx context.Context, id int64)
+	inspectFuncGetChatMessages   func(ctx context.Context, id int64, limit uint64, offset uint64)
 	afterGetChatMessagesCounter  uint64
 	beforeGetChatMessagesCounter uint64
 	GetChatMessagesMock          mChatRepositoryMockGetChatMessages
 
-	funcSendMessage          func(ctx context.Context, info *model.MessageInfo) (err error)
+	funcSendMessage          func(ctx context.Context, info *model.MessageInfo) (m1 model.Message, err error)
 	funcSendMessageOrigin    string
 	inspectFuncSendMessage   func(ctx context.Context, info *model.MessageInfo)
 	afterSendMessageCounter  uint64
@@ -71,6 +78,9 @@ func NewChatRepositoryMock(t minimock.Tester) *ChatRepositoryMock {
 
 	m.DeleteChatMock = mChatRepositoryMockDeleteChat{mock: m}
 	m.DeleteChatMock.callArgs = []*ChatRepositoryMockDeleteChatParams{}
+
+	m.GetChatInfoMock = mChatRepositoryMockGetChatInfo{mock: m}
+	m.GetChatInfoMock.callArgs = []*ChatRepositoryMockGetChatInfoParams{}
 
 	m.GetChatMessagesMock = mChatRepositoryMockGetChatMessages{mock: m}
 	m.GetChatMessagesMock.callArgs = []*ChatRepositoryMockGetChatMessagesParams{}
@@ -494,7 +504,7 @@ type ChatRepositoryMockCreateChatParamPtrs struct {
 
 // ChatRepositoryMockCreateChatResults contains results of the ChatRepository.CreateChat
 type ChatRepositoryMockCreateChatResults struct {
-	i1  int64
+	c2  model.Chat
 	err error
 }
 
@@ -598,7 +608,7 @@ func (mmCreateChat *mChatRepositoryMockCreateChat) Inspect(f func(ctx context.Co
 }
 
 // Return sets up results that will be returned by ChatRepository.CreateChat
-func (mmCreateChat *mChatRepositoryMockCreateChat) Return(i1 int64, err error) *ChatRepositoryMock {
+func (mmCreateChat *mChatRepositoryMockCreateChat) Return(c2 model.Chat, err error) *ChatRepositoryMock {
 	if mmCreateChat.mock.funcCreateChat != nil {
 		mmCreateChat.mock.t.Fatalf("ChatRepositoryMock.CreateChat mock is already set by Set")
 	}
@@ -606,13 +616,13 @@ func (mmCreateChat *mChatRepositoryMockCreateChat) Return(i1 int64, err error) *
 	if mmCreateChat.defaultExpectation == nil {
 		mmCreateChat.defaultExpectation = &ChatRepositoryMockCreateChatExpectation{mock: mmCreateChat.mock}
 	}
-	mmCreateChat.defaultExpectation.results = &ChatRepositoryMockCreateChatResults{i1, err}
+	mmCreateChat.defaultExpectation.results = &ChatRepositoryMockCreateChatResults{c2, err}
 	mmCreateChat.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
 	return mmCreateChat.mock
 }
 
 // Set uses given function f to mock the ChatRepository.CreateChat method
-func (mmCreateChat *mChatRepositoryMockCreateChat) Set(f func(ctx context.Context, info *model.ChatInfo) (i1 int64, err error)) *ChatRepositoryMock {
+func (mmCreateChat *mChatRepositoryMockCreateChat) Set(f func(ctx context.Context, info *model.ChatInfo) (c2 model.Chat, err error)) *ChatRepositoryMock {
 	if mmCreateChat.defaultExpectation != nil {
 		mmCreateChat.mock.t.Fatalf("Default expectation is already set for the ChatRepository.CreateChat method")
 	}
@@ -643,8 +653,8 @@ func (mmCreateChat *mChatRepositoryMockCreateChat) When(ctx context.Context, inf
 }
 
 // Then sets up ChatRepository.CreateChat return parameters for the expectation previously defined by the When method
-func (e *ChatRepositoryMockCreateChatExpectation) Then(i1 int64, err error) *ChatRepositoryMock {
-	e.results = &ChatRepositoryMockCreateChatResults{i1, err}
+func (e *ChatRepositoryMockCreateChatExpectation) Then(c2 model.Chat, err error) *ChatRepositoryMock {
+	e.results = &ChatRepositoryMockCreateChatResults{c2, err}
 	return e.mock
 }
 
@@ -670,7 +680,7 @@ func (mmCreateChat *mChatRepositoryMockCreateChat) invocationsDone() bool {
 }
 
 // CreateChat implements mm_repository.ChatRepository
-func (mmCreateChat *ChatRepositoryMock) CreateChat(ctx context.Context, info *model.ChatInfo) (i1 int64, err error) {
+func (mmCreateChat *ChatRepositoryMock) CreateChat(ctx context.Context, info *model.ChatInfo) (c2 model.Chat, err error) {
 	mm_atomic.AddUint64(&mmCreateChat.beforeCreateChatCounter, 1)
 	defer mm_atomic.AddUint64(&mmCreateChat.afterCreateChatCounter, 1)
 
@@ -690,7 +700,7 @@ func (mmCreateChat *ChatRepositoryMock) CreateChat(ctx context.Context, info *mo
 	for _, e := range mmCreateChat.CreateChatMock.expectations {
 		if minimock.Equal(*e.params, mm_params) {
 			mm_atomic.AddUint64(&e.Counter, 1)
-			return e.results.i1, e.results.err
+			return e.results.c2, e.results.err
 		}
 	}
 
@@ -722,7 +732,7 @@ func (mmCreateChat *ChatRepositoryMock) CreateChat(ctx context.Context, info *mo
 		if mm_results == nil {
 			mmCreateChat.t.Fatal("No results are set for the ChatRepositoryMock.CreateChat")
 		}
-		return (*mm_results).i1, (*mm_results).err
+		return (*mm_results).c2, (*mm_results).err
 	}
 	if mmCreateChat.funcCreateChat != nil {
 		return mmCreateChat.funcCreateChat(ctx, info)
@@ -1141,6 +1151,349 @@ func (m *ChatRepositoryMock) MinimockDeleteChatInspect() {
 	}
 }
 
+type mChatRepositoryMockGetChatInfo struct {
+	optional           bool
+	mock               *ChatRepositoryMock
+	defaultExpectation *ChatRepositoryMockGetChatInfoExpectation
+	expectations       []*ChatRepositoryMockGetChatInfoExpectation
+
+	callArgs []*ChatRepositoryMockGetChatInfoParams
+	mutex    sync.RWMutex
+
+	expectedInvocations       uint64
+	expectedInvocationsOrigin string
+}
+
+// ChatRepositoryMockGetChatInfoExpectation specifies expectation struct of the ChatRepository.GetChatInfo
+type ChatRepositoryMockGetChatInfoExpectation struct {
+	mock               *ChatRepositoryMock
+	params             *ChatRepositoryMockGetChatInfoParams
+	paramPtrs          *ChatRepositoryMockGetChatInfoParamPtrs
+	expectationOrigins ChatRepositoryMockGetChatInfoExpectationOrigins
+	results            *ChatRepositoryMockGetChatInfoResults
+	returnOrigin       string
+	Counter            uint64
+}
+
+// ChatRepositoryMockGetChatInfoParams contains parameters of the ChatRepository.GetChatInfo
+type ChatRepositoryMockGetChatInfoParams struct {
+	ctx context.Context
+	id  int64
+}
+
+// ChatRepositoryMockGetChatInfoParamPtrs contains pointers to parameters of the ChatRepository.GetChatInfo
+type ChatRepositoryMockGetChatInfoParamPtrs struct {
+	ctx *context.Context
+	id  *int64
+}
+
+// ChatRepositoryMockGetChatInfoResults contains results of the ChatRepository.GetChatInfo
+type ChatRepositoryMockGetChatInfoResults struct {
+	c2  model.Chat
+	err error
+}
+
+// ChatRepositoryMockGetChatInfoOrigins contains origins of expectations of the ChatRepository.GetChatInfo
+type ChatRepositoryMockGetChatInfoExpectationOrigins struct {
+	origin    string
+	originCtx string
+	originId  string
+}
+
+// Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
+// the test will fail minimock's automatic final call check if the mocked method was not called at least once.
+// Optional() makes method check to work in '0 or more' mode.
+// It is NOT RECOMMENDED to use this option unless you really need it, as default behaviour helps to
+// catch the problems when the expected method call is totally skipped during test run.
+func (mmGetChatInfo *mChatRepositoryMockGetChatInfo) Optional() *mChatRepositoryMockGetChatInfo {
+	mmGetChatInfo.optional = true
+	return mmGetChatInfo
+}
+
+// Expect sets up expected params for ChatRepository.GetChatInfo
+func (mmGetChatInfo *mChatRepositoryMockGetChatInfo) Expect(ctx context.Context, id int64) *mChatRepositoryMockGetChatInfo {
+	if mmGetChatInfo.mock.funcGetChatInfo != nil {
+		mmGetChatInfo.mock.t.Fatalf("ChatRepositoryMock.GetChatInfo mock is already set by Set")
+	}
+
+	if mmGetChatInfo.defaultExpectation == nil {
+		mmGetChatInfo.defaultExpectation = &ChatRepositoryMockGetChatInfoExpectation{}
+	}
+
+	if mmGetChatInfo.defaultExpectation.paramPtrs != nil {
+		mmGetChatInfo.mock.t.Fatalf("ChatRepositoryMock.GetChatInfo mock is already set by ExpectParams functions")
+	}
+
+	mmGetChatInfo.defaultExpectation.params = &ChatRepositoryMockGetChatInfoParams{ctx, id}
+	mmGetChatInfo.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
+	for _, e := range mmGetChatInfo.expectations {
+		if minimock.Equal(e.params, mmGetChatInfo.defaultExpectation.params) {
+			mmGetChatInfo.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmGetChatInfo.defaultExpectation.params)
+		}
+	}
+
+	return mmGetChatInfo
+}
+
+// ExpectCtxParam1 sets up expected param ctx for ChatRepository.GetChatInfo
+func (mmGetChatInfo *mChatRepositoryMockGetChatInfo) ExpectCtxParam1(ctx context.Context) *mChatRepositoryMockGetChatInfo {
+	if mmGetChatInfo.mock.funcGetChatInfo != nil {
+		mmGetChatInfo.mock.t.Fatalf("ChatRepositoryMock.GetChatInfo mock is already set by Set")
+	}
+
+	if mmGetChatInfo.defaultExpectation == nil {
+		mmGetChatInfo.defaultExpectation = &ChatRepositoryMockGetChatInfoExpectation{}
+	}
+
+	if mmGetChatInfo.defaultExpectation.params != nil {
+		mmGetChatInfo.mock.t.Fatalf("ChatRepositoryMock.GetChatInfo mock is already set by Expect")
+	}
+
+	if mmGetChatInfo.defaultExpectation.paramPtrs == nil {
+		mmGetChatInfo.defaultExpectation.paramPtrs = &ChatRepositoryMockGetChatInfoParamPtrs{}
+	}
+	mmGetChatInfo.defaultExpectation.paramPtrs.ctx = &ctx
+	mmGetChatInfo.defaultExpectation.expectationOrigins.originCtx = minimock.CallerInfo(1)
+
+	return mmGetChatInfo
+}
+
+// ExpectIdParam2 sets up expected param id for ChatRepository.GetChatInfo
+func (mmGetChatInfo *mChatRepositoryMockGetChatInfo) ExpectIdParam2(id int64) *mChatRepositoryMockGetChatInfo {
+	if mmGetChatInfo.mock.funcGetChatInfo != nil {
+		mmGetChatInfo.mock.t.Fatalf("ChatRepositoryMock.GetChatInfo mock is already set by Set")
+	}
+
+	if mmGetChatInfo.defaultExpectation == nil {
+		mmGetChatInfo.defaultExpectation = &ChatRepositoryMockGetChatInfoExpectation{}
+	}
+
+	if mmGetChatInfo.defaultExpectation.params != nil {
+		mmGetChatInfo.mock.t.Fatalf("ChatRepositoryMock.GetChatInfo mock is already set by Expect")
+	}
+
+	if mmGetChatInfo.defaultExpectation.paramPtrs == nil {
+		mmGetChatInfo.defaultExpectation.paramPtrs = &ChatRepositoryMockGetChatInfoParamPtrs{}
+	}
+	mmGetChatInfo.defaultExpectation.paramPtrs.id = &id
+	mmGetChatInfo.defaultExpectation.expectationOrigins.originId = minimock.CallerInfo(1)
+
+	return mmGetChatInfo
+}
+
+// Inspect accepts an inspector function that has same arguments as the ChatRepository.GetChatInfo
+func (mmGetChatInfo *mChatRepositoryMockGetChatInfo) Inspect(f func(ctx context.Context, id int64)) *mChatRepositoryMockGetChatInfo {
+	if mmGetChatInfo.mock.inspectFuncGetChatInfo != nil {
+		mmGetChatInfo.mock.t.Fatalf("Inspect function is already set for ChatRepositoryMock.GetChatInfo")
+	}
+
+	mmGetChatInfo.mock.inspectFuncGetChatInfo = f
+
+	return mmGetChatInfo
+}
+
+// Return sets up results that will be returned by ChatRepository.GetChatInfo
+func (mmGetChatInfo *mChatRepositoryMockGetChatInfo) Return(c2 model.Chat, err error) *ChatRepositoryMock {
+	if mmGetChatInfo.mock.funcGetChatInfo != nil {
+		mmGetChatInfo.mock.t.Fatalf("ChatRepositoryMock.GetChatInfo mock is already set by Set")
+	}
+
+	if mmGetChatInfo.defaultExpectation == nil {
+		mmGetChatInfo.defaultExpectation = &ChatRepositoryMockGetChatInfoExpectation{mock: mmGetChatInfo.mock}
+	}
+	mmGetChatInfo.defaultExpectation.results = &ChatRepositoryMockGetChatInfoResults{c2, err}
+	mmGetChatInfo.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
+	return mmGetChatInfo.mock
+}
+
+// Set uses given function f to mock the ChatRepository.GetChatInfo method
+func (mmGetChatInfo *mChatRepositoryMockGetChatInfo) Set(f func(ctx context.Context, id int64) (c2 model.Chat, err error)) *ChatRepositoryMock {
+	if mmGetChatInfo.defaultExpectation != nil {
+		mmGetChatInfo.mock.t.Fatalf("Default expectation is already set for the ChatRepository.GetChatInfo method")
+	}
+
+	if len(mmGetChatInfo.expectations) > 0 {
+		mmGetChatInfo.mock.t.Fatalf("Some expectations are already set for the ChatRepository.GetChatInfo method")
+	}
+
+	mmGetChatInfo.mock.funcGetChatInfo = f
+	mmGetChatInfo.mock.funcGetChatInfoOrigin = minimock.CallerInfo(1)
+	return mmGetChatInfo.mock
+}
+
+// When sets expectation for the ChatRepository.GetChatInfo which will trigger the result defined by the following
+// Then helper
+func (mmGetChatInfo *mChatRepositoryMockGetChatInfo) When(ctx context.Context, id int64) *ChatRepositoryMockGetChatInfoExpectation {
+	if mmGetChatInfo.mock.funcGetChatInfo != nil {
+		mmGetChatInfo.mock.t.Fatalf("ChatRepositoryMock.GetChatInfo mock is already set by Set")
+	}
+
+	expectation := &ChatRepositoryMockGetChatInfoExpectation{
+		mock:               mmGetChatInfo.mock,
+		params:             &ChatRepositoryMockGetChatInfoParams{ctx, id},
+		expectationOrigins: ChatRepositoryMockGetChatInfoExpectationOrigins{origin: minimock.CallerInfo(1)},
+	}
+	mmGetChatInfo.expectations = append(mmGetChatInfo.expectations, expectation)
+	return expectation
+}
+
+// Then sets up ChatRepository.GetChatInfo return parameters for the expectation previously defined by the When method
+func (e *ChatRepositoryMockGetChatInfoExpectation) Then(c2 model.Chat, err error) *ChatRepositoryMock {
+	e.results = &ChatRepositoryMockGetChatInfoResults{c2, err}
+	return e.mock
+}
+
+// Times sets number of times ChatRepository.GetChatInfo should be invoked
+func (mmGetChatInfo *mChatRepositoryMockGetChatInfo) Times(n uint64) *mChatRepositoryMockGetChatInfo {
+	if n == 0 {
+		mmGetChatInfo.mock.t.Fatalf("Times of ChatRepositoryMock.GetChatInfo mock can not be zero")
+	}
+	mm_atomic.StoreUint64(&mmGetChatInfo.expectedInvocations, n)
+	mmGetChatInfo.expectedInvocationsOrigin = minimock.CallerInfo(1)
+	return mmGetChatInfo
+}
+
+func (mmGetChatInfo *mChatRepositoryMockGetChatInfo) invocationsDone() bool {
+	if len(mmGetChatInfo.expectations) == 0 && mmGetChatInfo.defaultExpectation == nil && mmGetChatInfo.mock.funcGetChatInfo == nil {
+		return true
+	}
+
+	totalInvocations := mm_atomic.LoadUint64(&mmGetChatInfo.mock.afterGetChatInfoCounter)
+	expectedInvocations := mm_atomic.LoadUint64(&mmGetChatInfo.expectedInvocations)
+
+	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
+}
+
+// GetChatInfo implements mm_repository.ChatRepository
+func (mmGetChatInfo *ChatRepositoryMock) GetChatInfo(ctx context.Context, id int64) (c2 model.Chat, err error) {
+	mm_atomic.AddUint64(&mmGetChatInfo.beforeGetChatInfoCounter, 1)
+	defer mm_atomic.AddUint64(&mmGetChatInfo.afterGetChatInfoCounter, 1)
+
+	mmGetChatInfo.t.Helper()
+
+	if mmGetChatInfo.inspectFuncGetChatInfo != nil {
+		mmGetChatInfo.inspectFuncGetChatInfo(ctx, id)
+	}
+
+	mm_params := ChatRepositoryMockGetChatInfoParams{ctx, id}
+
+	// Record call args
+	mmGetChatInfo.GetChatInfoMock.mutex.Lock()
+	mmGetChatInfo.GetChatInfoMock.callArgs = append(mmGetChatInfo.GetChatInfoMock.callArgs, &mm_params)
+	mmGetChatInfo.GetChatInfoMock.mutex.Unlock()
+
+	for _, e := range mmGetChatInfo.GetChatInfoMock.expectations {
+		if minimock.Equal(*e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.c2, e.results.err
+		}
+	}
+
+	if mmGetChatInfo.GetChatInfoMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmGetChatInfo.GetChatInfoMock.defaultExpectation.Counter, 1)
+		mm_want := mmGetChatInfo.GetChatInfoMock.defaultExpectation.params
+		mm_want_ptrs := mmGetChatInfo.GetChatInfoMock.defaultExpectation.paramPtrs
+
+		mm_got := ChatRepositoryMockGetChatInfoParams{ctx, id}
+
+		if mm_want_ptrs != nil {
+
+			if mm_want_ptrs.ctx != nil && !minimock.Equal(*mm_want_ptrs.ctx, mm_got.ctx) {
+				mmGetChatInfo.t.Errorf("ChatRepositoryMock.GetChatInfo got unexpected parameter ctx, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmGetChatInfo.GetChatInfoMock.defaultExpectation.expectationOrigins.originCtx, *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
+			}
+
+			if mm_want_ptrs.id != nil && !minimock.Equal(*mm_want_ptrs.id, mm_got.id) {
+				mmGetChatInfo.t.Errorf("ChatRepositoryMock.GetChatInfo got unexpected parameter id, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmGetChatInfo.GetChatInfoMock.defaultExpectation.expectationOrigins.originId, *mm_want_ptrs.id, mm_got.id, minimock.Diff(*mm_want_ptrs.id, mm_got.id))
+			}
+
+		} else if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmGetChatInfo.t.Errorf("ChatRepositoryMock.GetChatInfo got unexpected parameters, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+				mmGetChatInfo.GetChatInfoMock.defaultExpectation.expectationOrigins.origin, *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmGetChatInfo.GetChatInfoMock.defaultExpectation.results
+		if mm_results == nil {
+			mmGetChatInfo.t.Fatal("No results are set for the ChatRepositoryMock.GetChatInfo")
+		}
+		return (*mm_results).c2, (*mm_results).err
+	}
+	if mmGetChatInfo.funcGetChatInfo != nil {
+		return mmGetChatInfo.funcGetChatInfo(ctx, id)
+	}
+	mmGetChatInfo.t.Fatalf("Unexpected call to ChatRepositoryMock.GetChatInfo. %v %v", ctx, id)
+	return
+}
+
+// GetChatInfoAfterCounter returns a count of finished ChatRepositoryMock.GetChatInfo invocations
+func (mmGetChatInfo *ChatRepositoryMock) GetChatInfoAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmGetChatInfo.afterGetChatInfoCounter)
+}
+
+// GetChatInfoBeforeCounter returns a count of ChatRepositoryMock.GetChatInfo invocations
+func (mmGetChatInfo *ChatRepositoryMock) GetChatInfoBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmGetChatInfo.beforeGetChatInfoCounter)
+}
+
+// Calls returns a list of arguments used in each call to ChatRepositoryMock.GetChatInfo.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmGetChatInfo *mChatRepositoryMockGetChatInfo) Calls() []*ChatRepositoryMockGetChatInfoParams {
+	mmGetChatInfo.mutex.RLock()
+
+	argCopy := make([]*ChatRepositoryMockGetChatInfoParams, len(mmGetChatInfo.callArgs))
+	copy(argCopy, mmGetChatInfo.callArgs)
+
+	mmGetChatInfo.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockGetChatInfoDone returns true if the count of the GetChatInfo invocations corresponds
+// the number of defined expectations
+func (m *ChatRepositoryMock) MinimockGetChatInfoDone() bool {
+	if m.GetChatInfoMock.optional {
+		// Optional methods provide '0 or more' call count restriction.
+		return true
+	}
+
+	for _, e := range m.GetChatInfoMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	return m.GetChatInfoMock.invocationsDone()
+}
+
+// MinimockGetChatInfoInspect logs each unmet expectation
+func (m *ChatRepositoryMock) MinimockGetChatInfoInspect() {
+	for _, e := range m.GetChatInfoMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to ChatRepositoryMock.GetChatInfo at\n%s with params: %#v", e.expectationOrigins.origin, *e.params)
+		}
+	}
+
+	afterGetChatInfoCounter := mm_atomic.LoadUint64(&m.afterGetChatInfoCounter)
+	// if default expectation was set then invocations count should be greater than zero
+	if m.GetChatInfoMock.defaultExpectation != nil && afterGetChatInfoCounter < 1 {
+		if m.GetChatInfoMock.defaultExpectation.params == nil {
+			m.t.Errorf("Expected call to ChatRepositoryMock.GetChatInfo at\n%s", m.GetChatInfoMock.defaultExpectation.returnOrigin)
+		} else {
+			m.t.Errorf("Expected call to ChatRepositoryMock.GetChatInfo at\n%s with params: %#v", m.GetChatInfoMock.defaultExpectation.expectationOrigins.origin, *m.GetChatInfoMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcGetChatInfo != nil && afterGetChatInfoCounter < 1 {
+		m.t.Errorf("Expected call to ChatRepositoryMock.GetChatInfo at\n%s", m.funcGetChatInfoOrigin)
+	}
+
+	if !m.GetChatInfoMock.invocationsDone() && afterGetChatInfoCounter > 0 {
+		m.t.Errorf("Expected %d calls to ChatRepositoryMock.GetChatInfo at\n%s but found %d calls",
+			mm_atomic.LoadUint64(&m.GetChatInfoMock.expectedInvocations), m.GetChatInfoMock.expectedInvocationsOrigin, afterGetChatInfoCounter)
+	}
+}
+
 type mChatRepositoryMockGetChatMessages struct {
 	optional           bool
 	mock               *ChatRepositoryMock
@@ -1167,14 +1520,18 @@ type ChatRepositoryMockGetChatMessagesExpectation struct {
 
 // ChatRepositoryMockGetChatMessagesParams contains parameters of the ChatRepository.GetChatMessages
 type ChatRepositoryMockGetChatMessagesParams struct {
-	ctx context.Context
-	id  int64
+	ctx    context.Context
+	id     int64
+	limit  uint64
+	offset uint64
 }
 
 // ChatRepositoryMockGetChatMessagesParamPtrs contains pointers to parameters of the ChatRepository.GetChatMessages
 type ChatRepositoryMockGetChatMessagesParamPtrs struct {
-	ctx *context.Context
-	id  *int64
+	ctx    *context.Context
+	id     *int64
+	limit  *uint64
+	offset *uint64
 }
 
 // ChatRepositoryMockGetChatMessagesResults contains results of the ChatRepository.GetChatMessages
@@ -1185,9 +1542,11 @@ type ChatRepositoryMockGetChatMessagesResults struct {
 
 // ChatRepositoryMockGetChatMessagesOrigins contains origins of expectations of the ChatRepository.GetChatMessages
 type ChatRepositoryMockGetChatMessagesExpectationOrigins struct {
-	origin    string
-	originCtx string
-	originId  string
+	origin       string
+	originCtx    string
+	originId     string
+	originLimit  string
+	originOffset string
 }
 
 // Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
@@ -1201,7 +1560,7 @@ func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) Optional() *mChatRe
 }
 
 // Expect sets up expected params for ChatRepository.GetChatMessages
-func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) Expect(ctx context.Context, id int64) *mChatRepositoryMockGetChatMessages {
+func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) Expect(ctx context.Context, id int64, limit uint64, offset uint64) *mChatRepositoryMockGetChatMessages {
 	if mmGetChatMessages.mock.funcGetChatMessages != nil {
 		mmGetChatMessages.mock.t.Fatalf("ChatRepositoryMock.GetChatMessages mock is already set by Set")
 	}
@@ -1214,7 +1573,7 @@ func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) Expect(ctx context.
 		mmGetChatMessages.mock.t.Fatalf("ChatRepositoryMock.GetChatMessages mock is already set by ExpectParams functions")
 	}
 
-	mmGetChatMessages.defaultExpectation.params = &ChatRepositoryMockGetChatMessagesParams{ctx, id}
+	mmGetChatMessages.defaultExpectation.params = &ChatRepositoryMockGetChatMessagesParams{ctx, id, limit, offset}
 	mmGetChatMessages.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
 	for _, e := range mmGetChatMessages.expectations {
 		if minimock.Equal(e.params, mmGetChatMessages.defaultExpectation.params) {
@@ -1271,8 +1630,54 @@ func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) ExpectIdParam2(id i
 	return mmGetChatMessages
 }
 
+// ExpectLimitParam3 sets up expected param limit for ChatRepository.GetChatMessages
+func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) ExpectLimitParam3(limit uint64) *mChatRepositoryMockGetChatMessages {
+	if mmGetChatMessages.mock.funcGetChatMessages != nil {
+		mmGetChatMessages.mock.t.Fatalf("ChatRepositoryMock.GetChatMessages mock is already set by Set")
+	}
+
+	if mmGetChatMessages.defaultExpectation == nil {
+		mmGetChatMessages.defaultExpectation = &ChatRepositoryMockGetChatMessagesExpectation{}
+	}
+
+	if mmGetChatMessages.defaultExpectation.params != nil {
+		mmGetChatMessages.mock.t.Fatalf("ChatRepositoryMock.GetChatMessages mock is already set by Expect")
+	}
+
+	if mmGetChatMessages.defaultExpectation.paramPtrs == nil {
+		mmGetChatMessages.defaultExpectation.paramPtrs = &ChatRepositoryMockGetChatMessagesParamPtrs{}
+	}
+	mmGetChatMessages.defaultExpectation.paramPtrs.limit = &limit
+	mmGetChatMessages.defaultExpectation.expectationOrigins.originLimit = minimock.CallerInfo(1)
+
+	return mmGetChatMessages
+}
+
+// ExpectOffsetParam4 sets up expected param offset for ChatRepository.GetChatMessages
+func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) ExpectOffsetParam4(offset uint64) *mChatRepositoryMockGetChatMessages {
+	if mmGetChatMessages.mock.funcGetChatMessages != nil {
+		mmGetChatMessages.mock.t.Fatalf("ChatRepositoryMock.GetChatMessages mock is already set by Set")
+	}
+
+	if mmGetChatMessages.defaultExpectation == nil {
+		mmGetChatMessages.defaultExpectation = &ChatRepositoryMockGetChatMessagesExpectation{}
+	}
+
+	if mmGetChatMessages.defaultExpectation.params != nil {
+		mmGetChatMessages.mock.t.Fatalf("ChatRepositoryMock.GetChatMessages mock is already set by Expect")
+	}
+
+	if mmGetChatMessages.defaultExpectation.paramPtrs == nil {
+		mmGetChatMessages.defaultExpectation.paramPtrs = &ChatRepositoryMockGetChatMessagesParamPtrs{}
+	}
+	mmGetChatMessages.defaultExpectation.paramPtrs.offset = &offset
+	mmGetChatMessages.defaultExpectation.expectationOrigins.originOffset = minimock.CallerInfo(1)
+
+	return mmGetChatMessages
+}
+
 // Inspect accepts an inspector function that has same arguments as the ChatRepository.GetChatMessages
-func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) Inspect(f func(ctx context.Context, id int64)) *mChatRepositoryMockGetChatMessages {
+func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) Inspect(f func(ctx context.Context, id int64, limit uint64, offset uint64)) *mChatRepositoryMockGetChatMessages {
 	if mmGetChatMessages.mock.inspectFuncGetChatMessages != nil {
 		mmGetChatMessages.mock.t.Fatalf("Inspect function is already set for ChatRepositoryMock.GetChatMessages")
 	}
@@ -1297,7 +1702,7 @@ func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) Return(mpa1 []*mode
 }
 
 // Set uses given function f to mock the ChatRepository.GetChatMessages method
-func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) Set(f func(ctx context.Context, id int64) (mpa1 []*model.Message, err error)) *ChatRepositoryMock {
+func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) Set(f func(ctx context.Context, id int64, limit uint64, offset uint64) (mpa1 []*model.Message, err error)) *ChatRepositoryMock {
 	if mmGetChatMessages.defaultExpectation != nil {
 		mmGetChatMessages.mock.t.Fatalf("Default expectation is already set for the ChatRepository.GetChatMessages method")
 	}
@@ -1313,14 +1718,14 @@ func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) Set(f func(ctx cont
 
 // When sets expectation for the ChatRepository.GetChatMessages which will trigger the result defined by the following
 // Then helper
-func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) When(ctx context.Context, id int64) *ChatRepositoryMockGetChatMessagesExpectation {
+func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) When(ctx context.Context, id int64, limit uint64, offset uint64) *ChatRepositoryMockGetChatMessagesExpectation {
 	if mmGetChatMessages.mock.funcGetChatMessages != nil {
 		mmGetChatMessages.mock.t.Fatalf("ChatRepositoryMock.GetChatMessages mock is already set by Set")
 	}
 
 	expectation := &ChatRepositoryMockGetChatMessagesExpectation{
 		mock:               mmGetChatMessages.mock,
-		params:             &ChatRepositoryMockGetChatMessagesParams{ctx, id},
+		params:             &ChatRepositoryMockGetChatMessagesParams{ctx, id, limit, offset},
 		expectationOrigins: ChatRepositoryMockGetChatMessagesExpectationOrigins{origin: minimock.CallerInfo(1)},
 	}
 	mmGetChatMessages.expectations = append(mmGetChatMessages.expectations, expectation)
@@ -1355,17 +1760,17 @@ func (mmGetChatMessages *mChatRepositoryMockGetChatMessages) invocationsDone() b
 }
 
 // GetChatMessages implements mm_repository.ChatRepository
-func (mmGetChatMessages *ChatRepositoryMock) GetChatMessages(ctx context.Context, id int64) (mpa1 []*model.Message, err error) {
+func (mmGetChatMessages *ChatRepositoryMock) GetChatMessages(ctx context.Context, id int64, limit uint64, offset uint64) (mpa1 []*model.Message, err error) {
 	mm_atomic.AddUint64(&mmGetChatMessages.beforeGetChatMessagesCounter, 1)
 	defer mm_atomic.AddUint64(&mmGetChatMessages.afterGetChatMessagesCounter, 1)
 
 	mmGetChatMessages.t.Helper()
 
 	if mmGetChatMessages.inspectFuncGetChatMessages != nil {
-		mmGetChatMessages.inspectFuncGetChatMessages(ctx, id)
+		mmGetChatMessages.inspectFuncGetChatMessages(ctx, id, limit, offset)
 	}
 
-	mm_params := ChatRepositoryMockGetChatMessagesParams{ctx, id}
+	mm_params := ChatRepositoryMockGetChatMessagesParams{ctx, id, limit, offset}
 
 	// Record call args
 	mmGetChatMessages.GetChatMessagesMock.mutex.Lock()
@@ -1384,7 +1789,7 @@ func (mmGetChatMessages *ChatRepositoryMock) GetChatMessages(ctx context.Context
 		mm_want := mmGetChatMessages.GetChatMessagesMock.defaultExpectation.params
 		mm_want_ptrs := mmGetChatMessages.GetChatMessagesMock.defaultExpectation.paramPtrs
 
-		mm_got := ChatRepositoryMockGetChatMessagesParams{ctx, id}
+		mm_got := ChatRepositoryMockGetChatMessagesParams{ctx, id, limit, offset}
 
 		if mm_want_ptrs != nil {
 
@@ -1396,6 +1801,16 @@ func (mmGetChatMessages *ChatRepositoryMock) GetChatMessages(ctx context.Context
 			if mm_want_ptrs.id != nil && !minimock.Equal(*mm_want_ptrs.id, mm_got.id) {
 				mmGetChatMessages.t.Errorf("ChatRepositoryMock.GetChatMessages got unexpected parameter id, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
 					mmGetChatMessages.GetChatMessagesMock.defaultExpectation.expectationOrigins.originId, *mm_want_ptrs.id, mm_got.id, minimock.Diff(*mm_want_ptrs.id, mm_got.id))
+			}
+
+			if mm_want_ptrs.limit != nil && !minimock.Equal(*mm_want_ptrs.limit, mm_got.limit) {
+				mmGetChatMessages.t.Errorf("ChatRepositoryMock.GetChatMessages got unexpected parameter limit, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmGetChatMessages.GetChatMessagesMock.defaultExpectation.expectationOrigins.originLimit, *mm_want_ptrs.limit, mm_got.limit, minimock.Diff(*mm_want_ptrs.limit, mm_got.limit))
+			}
+
+			if mm_want_ptrs.offset != nil && !minimock.Equal(*mm_want_ptrs.offset, mm_got.offset) {
+				mmGetChatMessages.t.Errorf("ChatRepositoryMock.GetChatMessages got unexpected parameter offset, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmGetChatMessages.GetChatMessagesMock.defaultExpectation.expectationOrigins.originOffset, *mm_want_ptrs.offset, mm_got.offset, minimock.Diff(*mm_want_ptrs.offset, mm_got.offset))
 			}
 
 		} else if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
@@ -1410,9 +1825,9 @@ func (mmGetChatMessages *ChatRepositoryMock) GetChatMessages(ctx context.Context
 		return (*mm_results).mpa1, (*mm_results).err
 	}
 	if mmGetChatMessages.funcGetChatMessages != nil {
-		return mmGetChatMessages.funcGetChatMessages(ctx, id)
+		return mmGetChatMessages.funcGetChatMessages(ctx, id, limit, offset)
 	}
-	mmGetChatMessages.t.Fatalf("Unexpected call to ChatRepositoryMock.GetChatMessages. %v %v", ctx, id)
+	mmGetChatMessages.t.Fatalf("Unexpected call to ChatRepositoryMock.GetChatMessages. %v %v %v %v", ctx, id, limit, offset)
 	return
 }
 
@@ -1522,6 +1937,7 @@ type ChatRepositoryMockSendMessageParamPtrs struct {
 
 // ChatRepositoryMockSendMessageResults contains results of the ChatRepository.SendMessage
 type ChatRepositoryMockSendMessageResults struct {
+	m1  model.Message
 	err error
 }
 
@@ -1625,7 +2041,7 @@ func (mmSendMessage *mChatRepositoryMockSendMessage) Inspect(f func(ctx context.
 }
 
 // Return sets up results that will be returned by ChatRepository.SendMessage
-func (mmSendMessage *mChatRepositoryMockSendMessage) Return(err error) *ChatRepositoryMock {
+func (mmSendMessage *mChatRepositoryMockSendMessage) Return(m1 model.Message, err error) *ChatRepositoryMock {
 	if mmSendMessage.mock.funcSendMessage != nil {
 		mmSendMessage.mock.t.Fatalf("ChatRepositoryMock.SendMessage mock is already set by Set")
 	}
@@ -1633,13 +2049,13 @@ func (mmSendMessage *mChatRepositoryMockSendMessage) Return(err error) *ChatRepo
 	if mmSendMessage.defaultExpectation == nil {
 		mmSendMessage.defaultExpectation = &ChatRepositoryMockSendMessageExpectation{mock: mmSendMessage.mock}
 	}
-	mmSendMessage.defaultExpectation.results = &ChatRepositoryMockSendMessageResults{err}
+	mmSendMessage.defaultExpectation.results = &ChatRepositoryMockSendMessageResults{m1, err}
 	mmSendMessage.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
 	return mmSendMessage.mock
 }
 
 // Set uses given function f to mock the ChatRepository.SendMessage method
-func (mmSendMessage *mChatRepositoryMockSendMessage) Set(f func(ctx context.Context, info *model.MessageInfo) (err error)) *ChatRepositoryMock {
+func (mmSendMessage *mChatRepositoryMockSendMessage) Set(f func(ctx context.Context, info *model.MessageInfo) (m1 model.Message, err error)) *ChatRepositoryMock {
 	if mmSendMessage.defaultExpectation != nil {
 		mmSendMessage.mock.t.Fatalf("Default expectation is already set for the ChatRepository.SendMessage method")
 	}
@@ -1670,8 +2086,8 @@ func (mmSendMessage *mChatRepositoryMockSendMessage) When(ctx context.Context, i
 }
 
 // Then sets up ChatRepository.SendMessage return parameters for the expectation previously defined by the When method
-func (e *ChatRepositoryMockSendMessageExpectation) Then(err error) *ChatRepositoryMock {
-	e.results = &ChatRepositoryMockSendMessageResults{err}
+func (e *ChatRepositoryMockSendMessageExpectation) Then(m1 model.Message, err error) *ChatRepositoryMock {
+	e.results = &ChatRepositoryMockSendMessageResults{m1, err}
 	return e.mock
 }
 
@@ -1697,7 +2113,7 @@ func (mmSendMessage *mChatRepositoryMockSendMessage) invocationsDone() bool {
 }
 
 // SendMessage implements mm_repository.ChatRepository
-func (mmSendMessage *ChatRepositoryMock) SendMessage(ctx context.Context, info *model.MessageInfo) (err error) {
+func (mmSendMessage *ChatRepositoryMock) SendMessage(ctx context.Context, info *model.MessageInfo) (m1 model.Message, err error) {
 	mm_atomic.AddUint64(&mmSendMessage.beforeSendMessageCounter, 1)
 	defer mm_atomic.AddUint64(&mmSendMessage.afterSendMessageCounter, 1)
 
@@ -1717,7 +2133,7 @@ func (mmSendMessage *ChatRepositoryMock) SendMessage(ctx context.Context, info *
 	for _, e := range mmSendMessage.SendMessageMock.expectations {
 		if minimock.Equal(*e.params, mm_params) {
 			mm_atomic.AddUint64(&e.Counter, 1)
-			return e.results.err
+			return e.results.m1, e.results.err
 		}
 	}
 
@@ -1749,7 +2165,7 @@ func (mmSendMessage *ChatRepositoryMock) SendMessage(ctx context.Context, info *
 		if mm_results == nil {
 			mmSendMessage.t.Fatal("No results are set for the ChatRepositoryMock.SendMessage")
 		}
-		return (*mm_results).err
+		return (*mm_results).m1, (*mm_results).err
 	}
 	if mmSendMessage.funcSendMessage != nil {
 		return mmSendMessage.funcSendMessage(ctx, info)
@@ -1836,6 +2252,8 @@ func (m *ChatRepositoryMock) MinimockFinish() {
 
 			m.MinimockDeleteChatInspect()
 
+			m.MinimockGetChatInfoInspect()
+
 			m.MinimockGetChatMessagesInspect()
 
 			m.MinimockSendMessageInspect()
@@ -1865,6 +2283,7 @@ func (m *ChatRepositoryMock) minimockDone() bool {
 		m.MinimockAddUsersToChatDone() &&
 		m.MinimockCreateChatDone() &&
 		m.MinimockDeleteChatDone() &&
+		m.MinimockGetChatInfoDone() &&
 		m.MinimockGetChatMessagesDone() &&
 		m.MinimockSendMessageDone()
 }

@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/brianvoe/gofakeit"
 	"github.com/gojuno/minimock/v3"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/spv-dev/chat-server/internal/api/chat"
 	"github.com/spv-dev/chat-server/internal/model"
@@ -31,8 +33,27 @@ func TestCreateChat(t *testing.T) {
 		},
 	}
 
-	resp := &desc.CreateChatResponse{
+	dt := time.Now()
+	chatObj := desc.Chat{
 		Id: chatID,
+		Info: &desc.ChatInfo{
+			Title: gofakeit.JobTitle(),
+		},
+		State:     1,
+		CreatedAt: timestamppb.New(dt),
+	}
+
+	chatModel := model.Chat{
+		ID: chatID,
+		Info: model.ChatInfo{
+			Title: gofakeit.JobTitle(),
+		},
+		State:     1,
+		CreatedAt: dt,
+	}
+
+	resp := &desc.CreateChatResponse{
+		Chat: &chatObj,
 	}
 
 	chatInfo := &model.ChatInfo{
@@ -49,7 +70,7 @@ func TestCreateChat(t *testing.T) {
 	t.Run("create chat success", func(t *testing.T) {
 		t.Parallel()
 
-		service.CreateChatMock.Expect(ctx, chatInfo).Return(chatID, nil)
+		service.CreateChatMock.Expect(ctx, chatInfo).Return(chatModel, nil)
 
 		r, err := api.CreateChat(ctx, req)
 
@@ -61,7 +82,7 @@ func TestCreateChat(t *testing.T) {
 	t.Run("create chat error", func(t *testing.T) {
 		t.Parallel()
 
-		service.CreateChatMock.Expect(ctx, chatInfo).Return(0, serviceErr)
+		service.CreateChatMock.Expect(ctx, chatInfo).Return(model.Chat{}, serviceErr)
 
 		_, err := api.CreateChat(ctx, req)
 

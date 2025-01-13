@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/brianvoe/gofakeit"
 	"github.com/gojuno/minimock/v3"
@@ -21,7 +22,15 @@ func TestCreateChat(t *testing.T) {
 
 	ctx := context.Background()
 
-	chatID := gofakeit.Int64()
+	dt := time.Now()
+	chatObj := model.Chat{
+		ID: gofakeit.Int64(),
+		Info: model.ChatInfo{
+			Title: gofakeit.JobTitle(),
+		},
+		State:     1,
+		CreatedAt: dt,
+	}
 	text := gofakeit.Name()
 
 	req := &model.ChatInfo{
@@ -44,23 +53,23 @@ func TestCreateChat(t *testing.T) {
 	t.Run("create chat success", func(t *testing.T) {
 		t.Parallel()
 
-		repo.CreateChatMock.Expect(ctx, req).Return(chatID, nil)
-		repo.AddUsersToChatMock.Expect(ctx, chatID, req.UserIDs).Return(nil)
+		repo.CreateChatMock.Expect(ctx, req).Return(chatObj, nil)
+		repo.AddUsersToChatMock.Expect(ctx, chatObj.ID, req.UserIDs).Return(nil)
 		trans.ReadCommitedMock.Set(func(ctx context.Context, handler db.Handler) error {
 			return handler(ctx)
 		})
 
-		id, err := service.CreateChat(ctx, req)
+		res, err := service.CreateChat(ctx, req)
 
 		assert.NoError(t, err)
-		assert.Equal(t, id, chatID)
+		assert.Equal(t, res, chatObj)
 	})
 
 	repoErr := errors.New("repo error")
 	t.Run("create chat error", func(t *testing.T) {
 		t.Parallel()
 
-		repo.CreateChatMock.Expect(ctx, req).Return(0, repoErr)
+		repo.CreateChatMock.Expect(ctx, req).Return(model.Chat{}, repoErr)
 		trans.ReadCommitedMock.Set(func(ctx context.Context, handler db.Handler) error {
 			return handler(ctx)
 		})
@@ -74,8 +83,8 @@ func TestCreateChat(t *testing.T) {
 	t.Run("create chat add users error", func(t *testing.T) {
 		t.Parallel()
 
-		repo.CreateChatMock.Expect(ctx, req).Return(chatID, nil)
-		repo.AddUsersToChatMock.Expect(ctx, chatID, req.UserIDs).Return(errorAddUsers)
+		repo.CreateChatMock.Expect(ctx, req).Return(chatObj, nil)
+		repo.AddUsersToChatMock.Expect(ctx, chatObj.ID, req.UserIDs).Return(errorAddUsers)
 		trans.ReadCommitedMock.Set(func(ctx context.Context, handler db.Handler) error {
 			return handler(ctx)
 		})

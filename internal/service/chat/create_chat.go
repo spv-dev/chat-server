@@ -9,34 +9,36 @@ import (
 )
 
 // CreateChat проверяет чат и отправляет на создание в слой БД
-func (s *serv) CreateChat(ctx context.Context, info *model.ChatInfo) (int64, error) {
+func (s *serv) CreateChat(ctx context.Context, info *model.ChatInfo) (model.Chat, error) {
 	if info == nil {
-		return 0, fmt.Errorf("Пустая информация о чате")
+		return model.Chat{}, fmt.Errorf("Пустая информация о чате")
 	}
 
 	if err := validator.CheckTitle(info.Title); err != nil {
-		return 0, err
+		return model.Chat{}, err
 	}
 
-	var id int64
+	var chat model.Chat
 	err := s.txManager.ReadCommited(ctx, func(ctx context.Context) error {
 		var errTx error
-		id, errTx = s.chatRepository.CreateChat(ctx, info)
+		chat, errTx = s.chatRepository.CreateChat(ctx, info)
 		if errTx != nil {
 			return errTx
 		}
 
-		errTx = s.chatRepository.AddUsersToChat(ctx, id, info.UserIDs)
-		if errTx != nil {
-			return errTx
+		if info.UserIDs != nil && len(info.UserIDs) > 0 {
+			errTx = s.chatRepository.AddUsersToChat(ctx, chat.ID, info.UserIDs)
+			if errTx != nil {
+				return errTx
+			}
 		}
 
 		return nil
 	})
 
 	if err != nil {
-		return 0, err
+		return model.Chat{}, err
 	}
 
-	return id, nil
+	return chat, nil
 }

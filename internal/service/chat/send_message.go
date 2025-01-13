@@ -9,18 +9,19 @@ import (
 )
 
 // SendMessage проверяет сообщение и отправляет в слой БД
-func (s *serv) SendMessage(ctx context.Context, info *model.MessageInfo) error {
+func (s *serv) SendMessage(ctx context.Context, info *model.MessageInfo) (model.Message, error) {
 	if info == nil {
-		return fmt.Errorf("Пустая информация о сообщении")
+		return model.Message{}, fmt.Errorf("Пустая информация о сообщении")
 	}
 
 	if err := validator.CheckBody(info.Body); err != nil {
-		return err
+		return model.Message{}, err
 	}
 
+	var message model.Message
 	err := s.txManager.ReadCommited(ctx, func(ctx context.Context) error {
 		var errTx error
-		errTx = s.chatRepository.SendMessage(ctx, info)
+		message, errTx = s.chatRepository.SendMessage(ctx, info)
 		if errTx != nil {
 			return errTx
 		}
@@ -29,8 +30,8 @@ func (s *serv) SendMessage(ctx context.Context, info *model.MessageInfo) error {
 	})
 
 	if err != nil {
-		return err
+		return model.Message{}, err
 	}
 
-	return nil
+	return message, nil
 }

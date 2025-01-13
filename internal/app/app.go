@@ -148,13 +148,16 @@ func (a *App) runPrometheus() error {
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.Handler())
 
+	host := a.serviceProvider.PrometheusConfig().Address()
+	headerTimeout := a.serviceProvider.PrometheusConfig().HeaderTimeout()
+
 	prometheusServer := &http.Server{
-		Addr:              "localhost:2112",
+		Addr:              host,
 		Handler:           mux,
-		ReadHeaderTimeout: time.Second * 5,
+		ReadHeaderTimeout: time.Second * time.Duration(headerTimeout),
 	}
 
-	log.Printf("Prometheus server is running on %v", "localhost:2112")
+	log.Printf("Prometheus server is running on %v", host)
 
 	err := prometheusServer.ListenAndServe()
 	if err != nil {
